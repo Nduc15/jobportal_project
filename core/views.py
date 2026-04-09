@@ -11,27 +11,38 @@ from .models import Job, Application
 User = get_user_model()
 def index(request):
     # Lấy các công việc đã được duyệt và có nhà tuyển dụng
-    jobs = Job.objects.filter(is_approved=True, employer__isnull=False).order_by('-created_at')
+    jobs = Job.objects.filter(is_approved=True, employer__isnull=False).order_by('-updated_at')
     
-    # 1. Bắt dữ liệu tìm kiếm
-    q = request.GET.get('q', '')
-    location = request.GET.get('location', '')
+    # 1. Bắt dữ liệu tìm kiếm từ tất cả các bộ lọc
+    q         = request.GET.get('q', '').strip()
+    location  = request.GET.get('location', '').strip()
+    job_type  = request.GET.get('job_type', '').strip()
+    experience = request.GET.get('experience', '').strip()
     
-    # 2. Xử lý thuật toán tìm kiếm (Q objects)
+    # 2. Áp dụng bộ lọc
     if q:
         jobs = jobs.filter(Q(title__icontains=q) | Q(description__icontains=q))
     if location:
         jobs = jobs.filter(location__icontains=location)
+    # job_type và experience lọc theo mô tả (vì model chưa có field riêng)
+    if job_type:
+        jobs = jobs.filter(description__icontains=job_type)
+    if experience:
+        jobs = jobs.filter(description__icontains=experience)
         
-    # 3. Thuật toán phân trang
-    paginator = Paginator(jobs, 10)  # Tối đa 10 công việc / 1 trang
+    # 3. Phân trang
+    paginator = Paginator(jobs, 9)  # 9 jobs / trang (3x3 grid)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Truyền cả page_obj (và giữ nguyên tên jobs là page_obj để tương thích vòng lặp cũ)
     context = {
         'jobs': page_obj,      
-        'page_obj': page_obj,  
+        'page_obj': page_obj,
+        # Giữ lại giá trị filter để hiển thị lại trên form
+        'q': q,
+        'selected_location': location,
+        'selected_job_type': job_type,
+        'selected_experience': experience,
     }
     return render(request, 'index.html', context)
 def register(request):
