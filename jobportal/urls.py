@@ -51,6 +51,17 @@ urlpatterns = [
 
     # Cập nhật trạng thái đơn ứng tuyển (Chấp nhận / Từ chối)
     path('dashboard/employer/application/<int:app_id>/update/', views.update_application_status, name='update_application_status'),
+
+    # Quản lý tin tuyển dụng (NTD)
+    path('jobs/create/', views.create_job, name='create_job'),
+    path('jobs/<int:job_id>/edit/', views.edit_job, name='edit_job'),
+    path('jobs/<int:job_id>/delete/', views.delete_job, name='delete_job'),
+
+    # Chi tiết công việc (Công khai)
+    path('jobs/<int:job_id>/', views.job_detail, name='job_detail'),
+
+    # Thao tác Admin
+    path('jobs/<int:job_id>/toggle-status/', views.toggle_job_status, name='toggle_job_status'),
 ]
 
 # Serve media files trong môi trường phát triển (DEBUG=True)

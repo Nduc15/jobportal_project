@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .forms import UserProfileForm
+from .forms import UserProfileForm, JobForm
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -86,7 +86,7 @@ def login(request):
             auth_login(request, user)
             if user.is_candidate:
                 return redirect('candidate_dashboard')
-            elif user.is_employer:
+            elif user.is_employer or user.is_superuser:
                 return redirect('employer_dashboard')
             else:
                 return redirect('home')
@@ -124,11 +124,18 @@ def candidate_dashboard(request):
 @login_required
 def employer_dashboard(request):
     """Dashboard cho NTD: hiển thị danh sách tin tuyển dụng và số CV nhận được."""
-    jobs = Job.objects.filter(
-        employer=request.user
-    ).annotate(
-        app_count=Count('apps')
-    ).order_by('-created_at')
+    if request.user.is_superuser:
+        # Admin thấy toàn bộ tin để quản lý
+        jobs = Job.objects.all().annotate(
+            app_count=Count('apps')
+        ).order_by('-created_at')
+    else:
+        # NTD chỉ thấy bài của mình
+        jobs = Job.objects.filter(
+            employer=request.user
+        ).annotate(
+            app_count=Count('apps')
+        ).order_by('-created_at')
 
     total_jobs = jobs.count()
     approved_jobs = jobs.filter(is_approved=True).count()
@@ -150,7 +157,7 @@ def dashboard_router(request):
     """Router trung tâm: tự động kiểm tra role và điều hướng đến Dashboard tương ứng."""
     if request.user.is_candidate:
         return redirect('candidate_dashboard')
-    elif request.user.is_employer:
+    elif request.user.is_employer or request.user.is_superuser:
         return redirect('employer_dashboard')
     return redirect('home')
 
@@ -158,7 +165,11 @@ def dashboard_router(request):
 @login_required
 def applicant_list(request, job_id):
     """Trang con: hiển thị danh sách ứng viên đã nộp CV cho một tin tuyển dụng cụ thể."""
-    job = get_object_or_404(Job, id=job_id, employer=request.user)
+    if request.user.is_superuser:
+        job = get_object_or_404(Job, id=job_id)
+    else:
+        job = get_object_or_404(Job, id=job_id, employer=request.user)
+
     applications = Application.objects.filter(
         job=job
     ).select_related('candidate').order_by('-applied_at')
@@ -174,7 +185,10 @@ def applicant_list(request, job_id):
 def update_application_status(request, app_id):
     """NTD đổi trạng thái đơn ứng tuyển (Chấp nhận / Từ chối)."""
     if request.method == 'POST':
-        application = get_object_or_404(Application, id=app_id, job__employer=request.user)
+        if request.user.is_superuser:
+            application = get_object_or_404(Application, id=app_id)
+        else:
+            application = get_object_or_404(Application, id=app_id, job__employer=request.user)
         new_status = request.POST.get('status')
         if new_status in ['Accepted', 'Rejected']:
             application.status = new_status
@@ -257,3 +271,98 @@ def apply_job(request, job_id):
         return redirect('candidate_dashboard')
 
     return redirect('home')
+
+# ========== ĐĂNG TIN TUYỂN DỤNG MỚI (Chỉ NTD) ==========
+@login_required
+def create_job(request):
+    """NTD tạo tin tuyển dụng mới. Tin sẽ ở trạng thái chờ duyệt (is_approved=False)."""
+    if not request.user.is_employer:
+        messages.error(request, "Chỉ Nhà tuyển dụng mới có thể đăng tin.")
+        return redirect('home')
+
+    if request.method == 'POST':
+        form = JobForm(request.POST)
+        if form.is_valid():
+            job = form.save(commit=False)
+            job.employer = request.user
+            job.is_approved = False
+            job.save()
+            messages.success(request, f'Đăng tin "{job.title}" thành công! Tin đang chờ Admin duyệt.')
+            return redirect('employer_dashboard')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
+    else:
+        form = JobForm()
+
+    return render(request, 'jobs/create_job.html', {'form': form})
+
+# ========== CHỈNH SỬA TIN TUYỂN DỤNG (Chỉ NTD sở hữu tin) ==========
+@login_required
+def edit_job(request, job_id):
+    """NTD chỉnh sửa tin tuyển dụng do mình đăng."""
+    job = get_object_or_404(Job, id=job_id, employer=request.user)
+
+    if request.method == 'POST':
+        form = JobForm(request.POST, instance=job)
+        if form.is_valid():
+            job = form.save(commit=False)
+            job.is_approved = False  # Reset về chờ duyệt khi sửa
+            job.save()
+            messages.success(request, f'Cập nhật tin "{job.title}" thành công! Tin sẽ được Admin duyệt lại.')
+            return redirect('employer_dashboard')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
+    else:
+        form = JobForm(instance=job)
+
+    return render(request, 'jobs/edit_job.html', {'form': form, 'job': job})
+
+# ========== XÓA TIN TUYỂN DỤNG (Chỉ NTD sở hữu tin) ==========
+@login_required
+def delete_job(request, job_id):
+    """NTD xóa tin tuyển dụng do mình đăng."""
+    job = get_object_or_404(Job, id=job_id, employer=request.user)
+
+    if request.method == 'POST':
+        title = job.title
+        job.delete()
+        messages.success(request, f'Đã xóa tin tuyển dụng "{title}" thành công.')
+        return redirect('employer_dashboard')
+
+    return render(request, 'jobs/delete_job.html', {'job': job})
+
+# ========== CHI TIẾT CÔNG VIỆC (Công khai) ==========
+def job_detail(request, job_id):
+    """Trang chi tiết công việc. Hiện nút Apply nếu user là ứng viên."""
+    job = get_object_or_404(Job, id=job_id)
+    
+    # Kiểm tra xem ứng viên đã apply chưa
+    has_applied = False
+    if request.user.is_authenticated and request.user.is_candidate:
+        has_applied = Application.objects.filter(job=job, candidate=request.user).exists()
+
+    context = {
+        'job': job,
+        'has_applied': has_applied,
+    }
+    return render(request, 'jobs/job_detail.html', context)
+
+# ========== DUYỆT TIN TUYỂN DỤNG (Chỉ Admin) ==========
+@login_required
+def toggle_job_status(request, job_id):
+    """Admin bật/tắt trạng thái duyệt của một tin tuyển dụng."""
+    if not request.user.is_superuser:
+        messages.error(request, "Bạn không có quyền thực hiện thao tác này.")
+        return redirect('home')
+        
+    job = get_object_or_404(Job, id=job_id)
+    job.is_approved = not job.is_approved
+    job.save()
+    
+    status_text = "Đã duyệt" if job.is_approved else "Đã hủy duyệt"
+    messages.success(request, f'Đã cập nhật trạng thái tin "{job.title}" thành: {status_text}')
+    return redirect('employer_dashboard')

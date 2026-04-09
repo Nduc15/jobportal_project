@@ -20,6 +20,12 @@
             <p class="dashboard-subtitle">Xin chào <strong>{{ user.company_name|default:user.username }}</strong>! Quản lý tin tuyển dụng và ứng viên tại đây.</p>
         </div>
     </div>
+    <!-- Nút đăng tin mới nổi bật -->
+    <div class="mt-3 mt-md-0">
+        <a href="{% url 'create_job' %}" class="btn btn-lg text-white fw-bold px-4 py-3" id="create-job-btn" style="background: linear-gradient(135deg, #00b14f, #009643); border: none; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,177,79,0.35); font-size: 1rem;">
+            <i class="fas fa-plus-circle me-2"></i> Đăng tin tuyển dụng mới
+        </a>
+    </div>
 </div>
 
 <!-- Stats Cards -->
@@ -72,8 +78,11 @@
 
 <!-- Job Postings Table -->
 <div class="dash-card">
-    <div class="dash-card-header">
-        <h4><i class="fas fa-clipboard-list"></i> Danh sách tin tuyển dụng</h4>
+    <div class="dash-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h4 class="mb-0"><i class="fas fa-clipboard-list"></i> Danh sách tin tuyển dụng</h4>
+        <a href="{% url 'create_job' %}" class="btn btn-sm text-white fw-semibold" style="background: #00b14f; border-radius: 8px;">
+            <i class="fas fa-plus me-1"></i> Thêm tin mới
+        </a>
     </div>
     <div class="table-responsive">
         <table class="table table-hover dash-table" id="employer-jobs-table">
@@ -81,8 +90,8 @@
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col"><i class="fas fa-heading"></i> Tiêu đề tin đăng</th>
-                    <th scope="col"><i class="fas fa-shield-alt"></i> Tình trạng hiển thị</th>
-                    <th scope="col"><i class="fas fa-file-invoice"></i> Số CV đã nhận</th>
+                    <th scope="col"><i class="fas fa-shield-alt"></i> Tình trạng</th>
+                    <th scope="col"><i class="fas fa-file-invoice"></i> CV nhận</th>
                     <th scope="col"><i class="fas fa-cogs"></i> Thao tác</th>
                 </tr>
             </thead>
@@ -90,32 +99,59 @@
                 {% for job in jobs %}
                 <tr>
                     <td>{{ forloop.counter }}</td>
-                    <td class="fw-semibold">{{ job.title }}</td>
+                    <td class="fw-semibold">
+                        <a href="{% url 'job_detail' job.id %}" style="color: #0a2540; text-decoration: none;" title="Xem chi tiết">
+                            {{ job.title }}
+                        </a>
+                    </td>
                     <td>
                         {% if job.is_approved %}
-                            <span class="badge badge-accepted"><i class="fas fa-eye"></i> Đã duyệt – Hiển thị</span>
+                            <span class="badge badge-accepted"><i class="fas fa-eye"></i> Đã duyệt</span>
                         {% else %}
-                            <span class="badge badge-pending"><i class="fas fa-eye-slash"></i> Chờ Admin duyệt</span>
+                            <span class="badge badge-pending"><i class="fas fa-eye-slash"></i> Chờ duyệt</span>
                         {% endif %}
                     </td>
                     <td>
                         <span class="cv-count">{{ job.app_count }}</span>
                     </td>
                     <td>
-                        <a href="{% url 'applicant_list' job.id %}" class="btn btn-view-cv" id="view-cv-btn-{{ job.id }}">
-                            <i class="fas fa-users"></i> Xem danh sách CV
-                        </a>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="{% url 'applicant_list' job.id %}" class="btn btn-sm btn-outline-primary" title="Xem danh sách ứng viên" style="border-radius: 8px;">
+                                <i class="fas fa-users"></i> CV
+                            </a>
+                            
+                            {% if user.is_superuser %}
+                                {% if job.is_approved %}
+                                    <a href="{% url 'toggle_job_status' job.id %}" class="btn btn-sm btn-outline-secondary" title="Hủy duyệt bài" style="border-radius: 8px;">
+                                        <i class="fas fa-times-circle"></i> Bỏ duyệt
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'toggle_job_status' job.id %}" class="btn btn-sm btn-success" title="Duyệt bài ngay" style="border-radius: 8px;">
+                                        <i class="fas fa-check-circle"></i> Duyệt bài
+                                    </a>
+                                {% endif %}
+                            {% endif %}
+
+                            <a href="{% url 'edit_job' job.id %}" class="btn btn-sm btn-outline-warning" title="Chỉnh sửa tin" style="border-radius: 8px;">
+                                <i class="fas fa-pen"></i> Sửa
+                            </a>
+                            <a href="{% url 'delete_job' job.id %}" class="btn btn-sm btn-outline-danger" title="Xóa tin" style="border-radius: 8px;">
+                                <i class="fas fa-trash"></i> Xóa
+                            </a>
+                        </div>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
                     <td colspan="5" class="text-center">
                         <div class="empty-state-modern py-5">
-                            <img src="{% static 'images/empty-state.png' %}" alt="No Data" class="img-fluid mb-4" style="max-width: 220px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.05));">
-                            <h5 style="color: #0f2b3d; font-weight: 700;">Chưa có dữ liệu</h5>
+                            <div class="d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px; border-radius: 50%; background: #f0fdf4;">
+                                <i class="fas fa-briefcase" style="font-size: 2rem; color: #00b14f;"></i>
+                            </div>
+                            <h5 style="color: #0f2b3d; font-weight: 700;">Chưa có tin tuyển dụng</h5>
                             <p class="text-muted mb-4" style="font-size: 0.95rem; max-width: 400px; margin: 0 auto;">Bạn chưa đăng bất kỳ tin tuyển dụng nào. Nhanh tay đăng tin để tìm kiếm nhân tài ngay!</p>
-                            <a href="{% url 'home' %}" class="btn btn-view-cv px-4 py-2" style="border-radius: 40px;">
-                                <i class="fas fa-plus-circle me-1"></i> Đăng tin mới (Sắp ra mắt)
+                            <a href="{% url 'create_job' %}" class="btn text-white px-4 py-2 fw-bold" style="background: linear-gradient(135deg, #00b14f, #009643); border-radius: 40px; border: none;">
+                                <i class="fas fa-plus-circle me-1"></i> Đăng tin ngay
                             </a>
                         </div>
                     </td>
