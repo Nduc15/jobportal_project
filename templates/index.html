@@ -201,15 +201,15 @@
                         </div>
 
                         <div class="card-footer bg-transparent border-0 px-4 pb-4 pt-0 d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center gap-3">
-                                <small class="text-muted" style="font-size: 0.78rem;">
+                            <div class="d-flex align-items-center gap-4">
+                                <small class="text-muted" style="font-size: 0.72rem; white-space: nowrap;">
                                     <i class="far fa-clock me-1"></i> {{ job.updated_at|naturaltime }}
                                 </small>
                                 
                                 <!-- Nút Lưu (Trái tim) -->
                                 {% if user.is_authenticated and user.is_candidate %}
                                     <a href="{% url 'toggle_save_job' job.id %}" class="btn btn-sm p-0 d-flex align-items-center justify-content-center shadow-none save-btn" 
-                                       style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #e2e8f0; color: {% if job.id in saved_job_ids %}#ef4444{% else %}#94a3b8{% endif %}; background: white; transition: all 0.2s;"
+                                       style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #e2e8f0; color: {% if job.id in saved_job_ids %}#ef4444{% else %}#94a3b8{% endif %}; background: white; transition: all 0.2s; flex-shrink: 0;"
                                        onclick="event.stopPropagation();" title="Lưu việc làm">
                                         {% if job.id in saved_job_ids %}
                                             <i class="fas fa-heart"></i>
@@ -220,10 +220,10 @@
                                 {% endif %}
                             </div>
 
-                            <form method="POST" action="{% url 'apply_job' job.id %}" style="display:inline;" onclick="event.stopPropagation();">
+                            <form method="POST" action="{% url 'apply_job' job.id %}" style="display:inline;" class="ms-3" onclick="event.stopPropagation();">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm text-white px-3 fw-bold"
-                                        style="background: #0D9488; border-radius: 8px; font-size: 0.82rem;"
+                                        style="background: #0D9488; border-radius: 8px; font-size: 0.82rem; white-space: nowrap;"
                                         onclick="return confirm('Nộp đơn bằng CV gốc đã tải lên trong Profile?');">
                                     Ứng tuyển nhanh <i class="fas fa-paper-plane ms-1"></i>
                                 </button>
