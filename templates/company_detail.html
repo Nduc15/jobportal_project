@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Hồ sơ công ty: {{ company.company_name|default:"Công ty TNHH Ẩn Danh" }}{% endblock %}
+
+{% block content %}
+<div class="row mt-4 mb-5">
+    <!-- Cột thông tin Công ty (Trái) -->
+    <div class="col-md-4 mb-4">
+        <div class="card border-0 shadow-sm text-center" style="border-radius: 16px;">
+            <div class="card-body py-5">
+                <div class="company-logo mb-4">
+                    {% if company.avatar %}
+                        <img src="{{ company.avatar.url }}" alt="{{ company.company_name }}" class="img-fluid rounded-circle shadow-sm" style="width: 120px; height: 120px; object-fit: cover; border: 4px solid #f8f9fa;">
+                    {% else %}
+                        <div class="default-logo d-flex align-items-center justify-content-center rounded-circle mx-auto shadow-sm" style="width: 120px; height: 120px; background: #e0f2fe; color: #0369a1; font-size: 2.5rem; font-weight: bold; border: 4px solid #f8f9fa;">
+                            {{ company.company_name|default:"?"|slice:":1"|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+                <h3 class="fw-bold text-dark">{{ company.company_name|default:"Công ty TNHH Ẩn Danh" }}</h3>
+                <p class="text-muted"><i class="fas fa-envelope text-primary me-2"></i> {{ company.email }}</p>
+                
+                {% if company.phone_number %}
+                    <p class="text-muted"><i class="fas fa-phone-alt text-success me-2"></i> {{ company.phone_number }}</p>
+                {% endif %}
+                
+                <hr class="my-4">
+                <div class="d-grid">
+                    <button class="btn btn-outline-primary" style="border-radius: 8px;">
+                        <i class="fas fa-paper-plane me-2"></i> Gửi tin nhắn
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cột danh sách việc làm (Phải) -->
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="fw-bold" style="color: #0f2b3d;">Việc làm đang tuyển dụng ({{ jobs.count }})</h4>
+        </div>
+
+        {% for job in jobs %}
+        <div class="card mb-3 border-0 shadow-sm" style="border-radius: 12px; transition: transform 0.2s;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="fw-bold mb-1"><a href="#" class="text-dark text-decoration-none">{{ job.title }}</a></h5>
+                        <p class="text-muted small mb-2"><i class="fas fa-map-marker-alt text-danger me-1"></i> {{ job.location }}</p>
+                        <div class="mb-2">
+                            <span class="badge" style="background-color: #fce7f3; color: #be185d;">
+                                💰 {% if job.salary_min and job.salary_max %}{{ job.salary_min }} - {{ job.salary_max }} Triệu VNĐ{% else %}Thỏa thuận{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-light border-0 py-2 d-flex justify-content-between align-items-center" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+                <small class="text-muted">Đăng ngày: {{ job.created_at|date:"d/m/Y" }}</small>
+                <form method="POST" action="{% url 'apply_job' job.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm text-white px-3" style="background-color: #0d9488; border-radius: 6px;" onclick="return confirm('Nộp đơn bằng CV Gốc bạn đã tải lên trong mục Profile?');">
+                        <i class="fas fa-paper-plane me-1"></i> Ứng tuyển nhanh
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-5 bg-white shadow-sm" style="border-radius: 16px;">
+            <img src="{% static 'images/empty-state.png' %}" alt="No Data" class="img-fluid mb-4" style="max-width: 150px; opacity: 0.7;">
+            <h5 class="text-muted fw-bold">Chưa có tin tuyển dụng nào</h5>
+            <p class="text-muted small">Công ty này hiện chưa đăng tải thông tin tuyển dụng nào lên hệ thống.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Ứng viên - JobPortal PTIT{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<!-- Dashboard Header -->
+<div class="dashboard-hero">
+    <div class="dashboard-hero-content">
+        <div class="dashboard-avatar">
+            <i class="fas fa-user-graduate"></i>
+        </div>
+        <div>
+            <h2 class="dashboard-title">Dashboard Ứng viên</h2>
+            <p class="dashboard-subtitle">Xin chào <strong>{{ user.username }}</strong>! Theo dõi trạng thái các đơn ứng tuyển của bạn.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="dash-stat-card">
+            <div class="dash-stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                <i class="fas fa-paper-plane"></i>
+            </div>
+            <div>
+                <div class="dash-stat-number">{{ total_applications }}</div>
+                <div class="dash-stat-label">Tổng đơn đã nộp</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dash-stat-card">
+            <div class="dash-stat-icon" style="background: linear-gradient(135deg, #2ecc71, #27ae60);">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div>
+                <div class="dash-stat-number">{{ accepted_count }}</div>
+                <div class="dash-stat-label">Được chấp nhận</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dash-stat-card">
+            <div class="dash-stat-icon" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div>
+                <div class="dash-stat-number">{{ pending_count }}</div>
+                <div class="dash-stat-label">Đang chờ duyệt</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Applications Table -->
+<div class="dash-card">
+    <div class="dash-card-header">
+        <h4><i class="fas fa-list-alt"></i> Danh sách đơn ứng tuyển</h4>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover dash-table" id="candidate-applications-table">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col"><i class="fas fa-briefcase"></i> Tên công việc</th>
+                    <th scope="col"><i class="fas fa-building"></i> Tên công ty</th>
+                    <th scope="col"><i class="fas fa-calendar-alt"></i> Ngày nộp</th>
+                    <th scope="col"><i class="fas fa-info-circle"></i> Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in applications %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td class="fw-semibold">{{ app.job.title }}</td>
+                    <td>{{ app.job.employer.company_name|default:"Công ty ẩn danh" }}</td>
+                    <td>{{ app.applied_at|date:"d/m/Y" }}</td>
+                    <td>
+                        {% if app.status == 'Pending' %}
+                            <span class="badge badge-pending"><i class="fas fa-hourglass-half"></i> Chờ duyệt</span>
+                        {% elif app.status == 'Accepted' %}
+                            <span class="badge badge-accepted"><i class="fas fa-check"></i> Chấp nhận</span>
+                        {% elif app.status == 'Rejected' %}
+                            <span class="badge badge-rejected"><i class="fas fa-times"></i> Từ chối</span>
+                        {% elif app.status == 'Viewed' %}
+                            <span class="badge badge-viewed"><i class="fas fa-eye"></i> Đã xem</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">
+                        <div class="empty-state-modern py-5">
+                            <img src="{% static 'images/empty-state.png' %}" alt="No Data" class="img-fluid mb-4" style="max-width: 220px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.05));">
+                            <h5 style="color: #0f2b3d; font-weight: 700;">Chưa có dữ liệu</h5>
+                            <p class="text-muted mb-4" style="font-size: 0.95rem; max-width: 400px; margin: 0 auto;">Bạn chưa nộp đơn nào cả. Hãy khám phá các cơ hội việc làm mới nhất ngay hôm nay!</p>
+                            <a href="{% url 'home' %}" class="btn btn-view-cv px-4 py-2" style="border-radius: 40px;">
+                                <i class="fas fa-search me-1"></i> Khám phá việc làm
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

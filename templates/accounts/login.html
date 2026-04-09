@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="row-split" style="display: flex; gap: 32px; margin: 40px 0;">
+    <div class="register-box card">
+        <h3>Đăng nhập</h3>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-danger" style="color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; padding: .75rem 1.25rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: .25rem;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" action="{% url 'login' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Email đăng nhập (Username)</label>
+                <input type="text" name="username" placeholder="Nhập địa chỉ email của bạn" required>
+            </div>
+            <div class="form-group">
+                <label>Mật khẩu</label>
+                <input type="password" name="password" placeholder="Nhập mật khẩu" required>
+            </div>
+
+            <button type="submit" class="btn-register">Đăng nhập</button>
+            
+            <div style="margin-top: 15px; text-align: center;">
+                <p>Chưa có tài khoản? <a href="{% url 'register' %}" style="color: #1a7f6b; font-weight: bold; text-decoration: none;">Đăng ký ngay</a></p>
+            </div>
+        </form>
+    </div>
+    <div class="info-box card">
+        <h3>Lợi thế nổi bật</h3>
+        <ul>
+            <li><i class="fas fa-check-circle" style="color:#1a7f6b;"></i> Hệ sinh thái nhân sự tiên phong</li>
+            <li><i class="fas fa-check-circle" style="color:#1a7f6b;"></i> Kết nối ứng viên IT & tài chính</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

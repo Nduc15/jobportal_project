@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Danh sách ứng viên – {{ job.title }} - JobPortal PTIT{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<nav class="dashboard-breadcrumb" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'employer_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Danh sách ứng viên</li>
+    </ol>
+</nav>
+
+<!-- Job Info Header -->
+<div class="dashboard-hero applicant-hero">
+    <div class="dashboard-hero-content">
+        <div class="dashboard-avatar employer-avatar">
+            <i class="fas fa-users"></i>
+        </div>
+        <div>
+            <h2 class="dashboard-title">{{ job.title }}</h2>
+            <p class="dashboard-subtitle">
+                Có <strong>{{ applications|length }}</strong> ứng viên đã nộp CV cho vị trí này.
+            </p>
+        </div>
+    </div>
+    <a href="{% url 'employer_dashboard' %}" class="btn btn-back-home">
+        <i class="fas fa-arrow-left"></i> Quay lại Dashboard
+    </a>
+</div>
+
+<!-- Applicants Table -->
+<div class="dash-card">
+    <div class="dash-card-header">
+        <h4><i class="fas fa-user-friends"></i> Danh sách ứng viên đã nộp CV</h4>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover dash-table" id="applicant-list-table">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col"><i class="fas fa-user"></i> Tên ứng viên</th>
+                    <th scope="col"><i class="fas fa-envelope"></i> Email</th>
+                    <th scope="col"><i class="fas fa-calendar"></i> Ngày nộp</th>
+                    <th scope="col"><i class="fas fa-info-circle"></i> Trạng thái</th>
+                    <th scope="col"><i class="fas fa-download"></i> File CV</th>
+                    <th scope="col"><i class="fas fa-cogs"></i> Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in applications %}
+                <tr class="applicant-row" id="applicant-row-{{ app.id }}">
+                    <td>{{ forloop.counter }}</td>
+                    <td class="fw-semibold">
+                        <div class="applicant-name">
+                            <div class="applicant-avatar-sm">{{ app.candidate.username|first }}</div>
+                            {{ app.candidate.username }}
+                        </div>
+                    </td>
+                    <td>{{ app.candidate.email }}</td>
+                    <td>{{ app.applied_at|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        {% if app.status == 'Pending' %}
+                            <span class="badge badge-pending"><i class="fas fa-hourglass-half"></i> Chờ duyệt</span>
+                        {% elif app.status == 'Accepted' %}
+                            <span class="badge badge-accepted"><i class="fas fa-check"></i> Chấp nhận</span>
+                        {% elif app.status == 'Rejected' %}
+                            <span class="badge badge-rejected"><i class="fas fa-times"></i> Từ chối</span>
+                        {% elif app.status == 'Viewed' %}
+                            <span class="badge badge-viewed"><i class="fas fa-eye"></i> Đã xem</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if app.cv_file %}
+                            <a href="{{ app.cv_file.url }}" class="btn btn-download-cv" target="_blank" id="download-cv-{{ app.id }}">
+                                <i class="fas fa-file-download"></i> Tải CV
+                            </a>
+                        {% else %}
+                            <span class="text-muted">Không có file</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            {% if app.status != 'Accepted' %}
+                                <form method="POST" action="{% url 'update_application_status' app.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="Accepted">
+                                    <button type="submit" class="btn btn-accept" id="accept-btn-{{ app.id }}" title="Chấp nhận ứng viên">
+                                        <i class="fas fa-check-circle"></i> Chấp nhận
+                                    </button>
+                                </form>
+                            {% endif %}
+                            {% if app.status != 'Rejected' %}
+                                <form method="POST" action="{% url 'update_application_status' app.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="Rejected">
+                                    <button type="submit" class="btn btn-reject" id="reject-btn-{{ app.id }}" title="Từ chối ứng viên">
+                                        <i class="fas fa-times-circle"></i> Từ chối
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center">
+                        <div class="empty-state-modern py-5">
+                            <img src="{% static 'images/empty-state.png' %}" alt="No Data" class="img-fluid mb-4" style="max-width: 220px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.05));">
+                            <h5 style="color: #0f2b3d; font-weight: 700;">Chưa có ứng viên</h5>
+                            <p class="text-muted mb-4" style="font-size: 0.95rem; max-width: 400px; margin: 0 auto;">Hiện tại chưa có ứng viên nào nộp CV cho vị trí này. Hãy kiên nhẫn đợi thêm một chút nhé!</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

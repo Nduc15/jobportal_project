@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Hồ sơ cá nhân{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4 mb-5">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0" style="border-radius: 16px;">
+            <div class="card-header bg-white border-0 pt-4 pb-2 text-center">
+                <h3 class="fw-bold" style="color: #0f2b3d;">Quản lý Hồ sơ & CV</h3>
+                <p class="text-muted">Cập nhật thông tin để nổi bật hơn trong mắt nhà tuyển dụng</p>
+            </div>
+            <div class="card-body px-5 pb-5">
+                
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="POST" action="{% url 'profile' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Avatar Section -->
+                    <div class="text-center mb-4">
+                        <div class="avatar-wrapper position-relative d-inline-block">
+                            {% if user_db.avatar %}
+                                <img id="avatar_preview" src="{{ user_db.avatar.url }}" alt="Avatar" class="rounded-circle shadow-sm" style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #f8f9fa;">
+                            {% else %}
+                                <div id="avatar_letter_preview" class="default-avatar rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background: #e0f2fe; color: #0369a1; font-size: 2.5rem; font-weight: bold; border: 3px solid #f8f9fa;">
+                                    {{ user_db.first_name|default:user_db.username|slice:":1"|upper }}
+                                </div>
+                            {% endif %}
+                            <label for="avatar_upload" class="position-absolute bottom-0 end-0 bg-white rounded-circle shadow-sm p-2" style="cursor: pointer;">
+                                <i class="fas fa-camera text-primary"></i>
+                            </label>
+                            {{ form.avatar }}
+                        </div>
+                    </div>
+
+                    <!-- Personal Info -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Họ và tên</label>
+                            <input type="text" class="form-control" value="{{ user.first_name }}" disabled style="background-color: #f9f9f9;">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Email</label>
+                            <input type="email" class="form-control" value="{{ user.email }}" disabled style="background-color: #f9f9f9;">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Số điện thoại</label>
+                        {{ form.phone_number }}
+                    </div>
+
+                    <!-- Skills -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Kỹ năng chuyên môn</label>
+                        {{ form.skills }}
+                        <div class="form-text">Phân cách các kỹ năng bằng dấu phẩy để hệ thống dễ dàng nhận diện.</div>
+                    </div>
+
+                    <!-- Upload Default CV -->
+                    <div class="card bg-light border-0 mb-4" style="border-radius: 12px;">
+                        <div class="card-body">
+                            <h6 class="fw-bold"><i class="fas fa-file-alt text-primary me-2"></i> CV Gốc của bạn</h6>
+                            <p class="small text-muted mb-3">Tải lên một CV chuẩn để sử dụng nhanh cho các đợt ứng tuyển (Chỉ nhận file PDF/DOCX, tối đa 5MB).</p>
+                            
+                            {% if user.default_cv %}
+                            <div class="mb-3 d-flex align-items-center">
+                                <i class="fas fa-check-circle text-success me-2"></i> 
+                                <span>Bạn đã tải lên CV: <a href="{{ user.default_cv.url }}" target="_blank" class="fw-bold text-decoration-none">{{ user.default_cv.name|truncatechars:30 }}</a></span>
+                            </div>
+                            {% endif %}
+                            
+                            {{ form.default_cv }}
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg" style="background-color: #0d9488; border: none; border-radius: 8px;">
+                            <i class="fas fa-save me-2"></i> Lưu thay đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // JS Logic: Preview Avatar
+    document.addEventListener("DOMContentLoaded", function() {
+        const fileInput = document.getElementById("avatar_upload");
+        const imagePreview = document.getElementById("avatar_preview");
+        const letterPreview = document.getElementById("avatar_letter_preview");
+
+        if(fileInput) {
+            fileInput.addEventListener("change", function(e) {
+                const file = e.target.files[0];
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        if(imagePreview) {
+                            imagePreview.src = event.target.result;
+                        } else if (letterPreview) {
+                            // Nếu lúc trước chưa có ảnh (dùng chữ cái đầu), ta tạo luôn img element đè lên
+                            letterPreview.innerHTML = `<img src="${event.target.result}" class="rounded-circle shadow-sm" style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #f8f9fa;">`;
+                            letterPreview.style.background = 'transparent';
+                            letterPreview.style.border = 'none';
+                        }
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

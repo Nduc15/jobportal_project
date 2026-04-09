@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Danh sách Nhà Tuyển Dụng{% endblock %}
+
+{% block content %}
+<div class="company-list-header text-center mb-5 mt-4">
+    <h2 class="fw-bold" style="color: #0f2b3d;">Khám phá các tổ chức hàng đầu</h2>
+    <p class="text-muted">Tìm kiếm môi trường làm việc phù hợp nhất với định hướng của bạn</p>
+</div>
+
+<div class="row align-items-stretch">
+    {% for company in companies %}
+    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+        <div class="card h-100 company-card border-0 shadow-sm text-center">
+            <div class="card-body d-flex flex-column align-items-center">
+                <div class="company-logo mb-3">
+                    {% if company.avatar %}
+                        <img src="{{ company.avatar.url }}" alt="{{ company.company_name }}" class="img-fluid rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+                    {% else %}
+                        <div class="default-logo d-flex align-items-center justify-content-center rounded-circle" style="width: 80px; height: 80px; background: #e0f2fe; color: #0369a1; font-size: 1.5rem; font-weight: bold;">
+                            {{ company.company_name|default:"?"|slice:":1"|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+                <h5 class="card-title fw-bold text-dark">{{ company.company_name|default:"Công ty ẩn danh" }}</h5>
+                <p class="text-muted small mb-3"><i class="fas fa-envelope me-1"></i> {{ company.email }}</p>
+                <div class="mt-auto">
+                    <span class="badge" style="background-color: #f0fdf4; color: #166534; padding: 8px 12px; font-weight: 500;">
+                        Đang tuyển {{ company.job_count }} vị trí
+                    </span>
+                </div>
+            </div>
+            <div class="card-footer bg-white border-0 py-3">
+                <a href="{% url 'company_detail' company.id %}" class="btn btn-outline-primary btn-sm w-100" style="border-radius: 20px;">Xem hồ sơ công ty</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+        <div class="empty-state-modern py-5">
+            <img src="{% static 'images/empty-state.png' %}" alt="No Data" class="img-fluid mb-4" style="max-width: 200px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.05));">
+            <h5 style="color: #0f2b3d; font-weight: 700;">Chưa có nhà tuyển dụng nào</h5>
+            <p class="text-muted" style="font-size: 0.95rem; max-width: 400px; margin: 0 auto;">Hệ thống đang mở rộng để chào đón các công ty hàng đầu. Hãy quay lại sau nhé!</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+.company-card {
+    border-radius: 16px;
+    transition: all 0.3s ease;
+}
+.company-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.08) !important;
+}
+</style>
+{% endblock %}

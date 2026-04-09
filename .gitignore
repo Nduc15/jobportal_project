@@ -1,0 +1,10 @@
+# Bỏ qua môi trường ảo 
+env/
+
+# Bỏ qua các file cache của Python
+__pycache__/
+*.pyc
+
+# Bỏ qua Database và file upload
+db.sqlite3
+media/

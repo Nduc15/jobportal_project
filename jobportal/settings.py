@@ -25,7 +25,12 @@ SECRET_KEY = 'django-insecure-@)_ro$fzyzsubpd*6k3ms2_#@^l)i9p9%q=(qw%9ktbhd^$nnc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+
+# Cho phép Ngrok vượt qua hệ thống bảo mật chống giả mạo của Django
+CSRF_TRUSTED_ORIGINS = [
+    'https://basiliscine-nonconclusive-lillia.ngrok-free.dev',
+]
 
 
 # Application definition
@@ -37,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'core',
 ]
 
 MIDDLEWARE = [
@@ -119,3 +125,7 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+AUTH_USER_MODEL = 'core.User'
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'

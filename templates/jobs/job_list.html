@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Thống kê giả, sau có thể lấy từ context -->
+<div class="stats-grid">
+    <div class="stat-card"><div class="stat-number">{{ total_jobs|default:"0" }}</div><div>Việc làm đang tuyển</div></div>
+    <div class="stat-card"><div class="stat-number">{{ new_jobs_today|default:"0" }}</div><div>Việc làm mới hôm nay</div></div>
+</div>
+
+<!-- Filter bar (có thể dùng GET) -->
+<div class="filter-bar">
+    <span class="filter-label"><i class="fas fa-map-marker-alt"></i> Lọc theo:</span>
+    <a href="?location=" class="filter-chip {% if not request.GET.location %}active{% endif %}">🌍 Tất cả</a>
+    <a href="?location=HaNoi" class="filter-chip {% if request.GET.location == 'HaNoi' %}active{% endif %}">🇻🇳 Hà Nội</a>
+    <a href="?location=HCM" class="filter-chip {% if request.GET.location == 'HCM' %}active{% endif %}">🏙️ TP Hồ Chí Minh</a>
+</div>
+
+<!-- Danh sách việ làm từ context 'jobs' -->
+<div class="job-grid">
+    {% for job in jobs %}
+    <div class="job-card">
+        <div class="job-title">{{ job.title }}</div>
+        <div class="company"><i class="fas fa-building"></i> {{ job.employer.company_name }}</div>
+        <div><span class="salary"><i class="fas fa-coins"></i> {{ job.salary_min|floatformat:0 }} - {{ job.salary_max|floatformat:0 }} triệu</span></div>
+        <div class="location"><i class="fas fa-map-pin"></i> {{ job.location }}</div>
+        <div style="margin-top: 12px;">
+            <button class="btn-apply" style="background:none; border:1px solid #1a7f6b; border-radius:40px; padding:6px 16px;">Ứng tuyển →</button>
+        </div>
+    </div>
+    {% empty %}
+    <div class="card" style="grid-column:1/-1; text-align:center;">🔍 Hiện chưa có công việc nào.</div>
+    {% endfor %}
+</div>
+
+<!-- A+ Badge: hiển thị trạng thái đơn ứng tuyển (nếu user đã đăng nhập) -->
+{% if user.is_authenticated %}
+<div class="card" style="margin-top: 40px;">
+    <h3><i class="fas fa-tags"></i> Trạng thái đơn ứng tuyển của bạn</h3>
+    <div class="app-status-list">
+        {% for app in applications %}
+        <div class="app-item">
+            <div><strong>{{ app.job.title }}</strong><br><span style="font-size:0.85rem;">Nộp ngày: {{ app.applied_date|date:"d/m/Y" }}</span></div>
+            <div class="badge 
+                {% if app.status == 'pending' %}badge-pending
+                {% elif app.status == 'accepted' %}badge-accepted
+                {% elif app.status == 'rejected' %}badge-rejected{% endif %}">
+                {% if app.status == 'pending' %}⏳ Chờ duyệt
+                {% elif app.status == 'accepted' %}✅ Chấp nhận
+                {% else %}❌ Từ chối{% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <p>Bạn chưa có đơn ứng tuyển nào.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
