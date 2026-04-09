@@ -10,6 +10,18 @@
      UNIFIED SEARCH FORM: Hero (Main Form)
      Dòng này chỉ bọc phần Hero để tránh lồng Form (Nested Form BUG)
      ===================================================================== -->
+<style>
+    .save-btn:hover {
+        transform: scale(1.15);
+        background-color: #fff1f2 !important;
+        border-color: #fecdd3 !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .save-btn:active {
+        transform: scale(0.95);
+    }
+</style>
+
 <form id="masterSearchForm" method="GET" action="{% url 'home' %}">
 <!-- ===== HERO SECTION ===== -->
 <div class="hero-section position-relative overflow-hidden" style="background: linear-gradient(135deg, #0a2540 0%, #1e4b7a 100%); padding: 40px 0;">
@@ -196,7 +208,7 @@
                                 
                                 <!-- Nút Lưu (Trái tim) -->
                                 {% if user.is_authenticated and user.is_candidate %}
-                                    <a href="{% url 'toggle_save_job' job.id %}" class="btn btn-sm p-0 d-flex align-items-center justify-content-center shadow-none" 
+                                    <a href="{% url 'toggle_save_job' job.id %}" class="btn btn-sm p-0 d-flex align-items-center justify-content-center shadow-none save-btn" 
                                        style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #e2e8f0; color: {% if job.id in saved_job_ids %}#ef4444{% else %}#94a3b8{% endif %}; background: white; transition: all 0.2s;"
                                        onclick="event.stopPropagation();" title="Lưu việc làm">
                                         {% if job.id in saved_job_ids %}
