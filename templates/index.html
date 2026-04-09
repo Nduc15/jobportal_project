@@ -7,11 +7,10 @@
 {% block content %}
 
 <!-- =====================================================================
-     UNIFIED SEARCH FORM: Hero + Sidebar đều trong 1 form duy nhất
-     Params: ?q=...&location=...&job_type=...&experience=...
+     UNIFIED SEARCH FORM: Hero (Main Form)
+     Dòng này chỉ bọc phần Hero để tránh lồng Form (Nested Form BUG)
      ===================================================================== -->
 <form id="masterSearchForm" method="GET" action="{% url 'home' %}">
-
 <!-- ===== HERO SECTION ===== -->
 <div class="hero-section position-relative overflow-hidden" style="background: linear-gradient(135deg, #0a2540 0%, #1e4b7a 100%); padding: 40px 0;">
     <div class="position-absolute top-0 start-0 w-100 h-100" style="opacity: 0.08; background-image: radial-gradient(circle at 1.5px 1.5px, white 1px, transparent 0); background-size: 25px 25px;"></div>
@@ -62,6 +61,7 @@
         </div>
     </div>
 </div>
+</form>
 <!-- ===== END HERO SECTION ===== -->
 
 <!-- ===== JOB LISTING + SIDEBAR ===== -->
@@ -77,22 +77,22 @@
             <div class="mb-4">
                 <p class="fw-bold mb-3 text-dark" style="font-size: 0.9rem;">Hình thức làm việc</p>
                 <div class="d-flex align-items-center mb-2">
-                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="job_type" id="jt_all" value=""
+                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="job_type" id="jt_all" value="" form="masterSearchForm"
                            {% if not selected_job_type %}checked{% endif %}>
                     <label class="ms-2 text-secondary mb-0" for="jt_all" style="font-size: 0.85rem;">Tất cả</label>
                 </div>
                 <div class="d-flex align-items-center mb-2">
-                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="job_type" id="jt_fulltime" value="Toàn thời gian"
+                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="job_type" id="jt_fulltime" value="Toàn thời gian" form="masterSearchForm"
                            {% if selected_job_type == 'Toàn thời gian' %}checked{% endif %}>
                     <label class="ms-2 text-secondary mb-0" for="jt_fulltime" style="font-size: 0.85rem;">Toàn thời gian</label>
                 </div>
                 <div class="d-flex align-items-center mb-2">
-                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="job_type" id="jt_parttime" value="Bán thời gian"
+                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="job_type" id="jt_parttime" value="Bán thời gian" form="masterSearchForm"
                            {% if selected_job_type == 'Bán thời gian' %}checked{% endif %}>
                     <label class="ms-2 text-secondary mb-0" for="jt_parttime" style="font-size: 0.85rem;">Bán thời gian</label>
                 </div>
                 <div class="d-flex align-items-center mb-2">
-                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="job_type" id="jt_remote" value="Làm từ xa"
+                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="job_type" id="jt_remote" value="Làm từ xa" form="masterSearchForm"
                            {% if selected_job_type == 'Làm từ xa' %}checked{% endif %}>
                     <label class="ms-2 text-secondary mb-0" for="jt_remote" style="font-size: 0.85rem;">Làm từ xa</label>
                 </div>
@@ -104,22 +104,22 @@
             <div class="mb-4">
                 <p class="fw-bold mb-3 text-dark" style="font-size: 0.9rem;">Kinh nghiệm</p>
                 <div class="d-flex align-items-center mb-2">
-                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="experience" id="exp_all" value=""
+                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="experience" id="exp_all" value="" form="masterSearchForm"
                            {% if not selected_experience %}checked{% endif %}>
                     <label class="ms-2 text-secondary mb-0" for="exp_all" style="font-size: 0.85rem;">Tất cả</label>
                 </div>
                 <div class="d-flex align-items-center mb-2">
-                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="experience" id="exp_fresher" value="Fresher"
+                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="experience" id="exp_fresher" value="Fresher" form="masterSearchForm"
                            {% if selected_experience == 'Fresher' %}checked{% endif %}>
                     <label class="ms-2 text-secondary mb-0" for="exp_fresher" style="font-size: 0.85rem;">Thực tập / Fresher</label>
                 </div>
                 <div class="d-flex align-items-center mb-2">
-                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="experience" id="exp_junior" value="Junior"
+                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="experience" id="exp_junior" value="Junior" form="masterSearchForm"
                            {% if selected_experience == 'Junior' %}checked{% endif %}>
                     <label class="ms-2 text-secondary mb-0" for="exp_junior" style="font-size: 0.85rem;">Junior</label>
                 </div>
                 <div class="d-flex align-items-center mb-2">
-                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="experience" id="exp_senior" value="Senior"
+                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="experience" id="exp_senior" value="Senior" form="masterSearchForm"
                            {% if selected_experience == 'Senior' %}checked{% endif %}>
                     <label class="ms-2 text-secondary mb-0" for="exp_senior" style="font-size: 0.85rem;">Senior / Quản lý</label>
                 </div>
@@ -137,25 +137,42 @@
             {% if jobs %}
                 {% for job in jobs %}
                 <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card h-100 border-0 shadow-sm card-hover" style="border-radius: 16px; transition: transform 0.2s, box-shadow 0.2s;">
+                    <div class="card h-100 border-0 shadow-sm card-hover" 
+                         style="border-radius: 16px; transition: all 0.2s; cursor: pointer; overflow: hidden;"
+                         onclick="location.href='{% url 'job_detail' job.id %}'">
+                        
                         <div class="card-body p-4 d-flex flex-column gap-3">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="company-logo d-flex align-items-center justify-content-center fw-bold text-white shadow-sm"
-                                     style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #f97316, #ea580c); font-size: 1.4rem; flex-shrink: 0;">
-                                    {{ job.employer.company_name|default:"C"|first }}
-                                </div>
+                                {% if job.employer.avatar %}
+                                    <img src="{{ job.employer.avatar.url }}" alt="Logo" class="shadow-sm"
+                                         style="width: 48px; height: 48px; border-radius: 12px; object-fit: cover; flex-shrink: 0;">
+                                {% else %}
+                                    <div class="company-logo d-flex align-items-center justify-content-center fw-bold text-white shadow-sm"
+                                         style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #f97316, #ea580c); font-size: 1.4rem; flex-shrink: 0;">
+                                        {{ job.employer.company_name|default:"C"|first }}
+                                    </div>
+                                {% endif %}
                                 <div class="company-info flex-grow-1 overflow-hidden">
                                     <h5 class="card-title fw-bold mb-1" style="font-size: 1rem;">
-                                        <a href="{% url 'job_detail' job.id %}" style="color: #0a2540; text-decoration: none;">{{ job.title }}</a>
+                                        <a href="{% url 'job_detail' job.id %}" style="color: #0a2540; text-decoration: none;" onclick="event.stopPropagation();">{{ job.title }}</a>
                                     </h5>
-                                    <h6 class="card-subtitle mb-0" style="color: #475569; font-size: 0.85rem;">
+                                    <h6 class="card-subtitle mb-0 text-truncate" style="color: #475569; font-size: 0.85rem;">
                                         <span class="fw-bold">{{ job.employer.company_name|default:"Công ty" }}</span>
                                         <i class="fas fa-check-circle ms-1" style="color: #0ea5e9;" title="Verified"></i>
                                     </h6>
                                 </div>
                             </div>
 
-                            <div class="job-meta">
+                            <!-- Tags Kỹ năng -->
+                            {% if job.requirements_list %}
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for tag in job.requirements_list %}
+                                    <span class="badge" style="background: #f1f5f9; color: #475569; font-weight: 500; font-size: 0.72rem; border-radius: 4px; padding: 4px 8px;">{{ tag|upper }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <div class="job-meta mt-auto">
                                 <p class="card-text mb-2 d-flex align-items-center text-muted" style="font-size: 0.88rem;">
                                     <i class="fas fa-map-marker-alt me-2" style="color: #94a3b8;"></i>
                                     <strong>{{ job.location }}</strong>
@@ -163,18 +180,35 @@
                                 <p class="card-text mb-0 d-flex align-items-center fw-bold" style="color: #059669; font-size: 0.9rem;">
                                     <span class="me-2">💰</span>
                                     {% if job.salary_min and job.salary_max %}
-                                        {{ job.salary_min }} - {{ job.salary_max }} Triệu VNĐ
+                                        {{ job.salary_min|floatformat:0 }} - {{ job.salary_max|floatformat:0 }} Triệu VNĐ
                                     {% else %}
                                         Thỏa thuận
                                     {% endif %}
                                 </p>
                             </div>
                         </div>
+
                         <div class="card-footer bg-transparent border-0 px-4 pb-4 pt-0 d-flex justify-content-between align-items-center">
-                            <small class="text-muted" style="font-size: 0.78rem;">
-                                <i class="far fa-clock me-1"></i> {{ job.updated_at|naturaltime }}
-                            </small>
-                            <form method="POST" action="{% url 'apply_job' job.id %}" style="display:inline;">
+                            <div class="d-flex align-items-center gap-3">
+                                <small class="text-muted" style="font-size: 0.78rem;">
+                                    <i class="far fa-clock me-1"></i> {{ job.updated_at|naturaltime }}
+                                </small>
+                                
+                                <!-- Nút Lưu (Trái tim) -->
+                                {% if user.is_authenticated and user.is_candidate %}
+                                    <a href="{% url 'toggle_save_job' job.id %}" class="btn btn-sm p-0 d-flex align-items-center justify-content-center shadow-none" 
+                                       style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #e2e8f0; color: {% if job.id in saved_job_ids %}#ef4444{% else %}#94a3b8{% endif %}; background: white; transition: all 0.2s;"
+                                       onclick="event.stopPropagation();" title="Lưu việc làm">
+                                        {% if job.id in saved_job_ids %}
+                                            <i class="fas fa-heart"></i>
+                                        {% else %}
+                                            <i class="far fa-heart"></i>
+                                        {% endif %}
+                                    </a>
+                                {% endif %}
+                            </div>
+
+                            <form method="POST" action="{% url 'apply_job' job.id %}" style="display:inline;" onclick="event.stopPropagation();">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm text-white px-3 fw-bold"
                                         style="background: #0D9488; border-radius: 8px; font-size: 0.82rem;"
@@ -233,8 +267,6 @@
 
 </div>
 </div><!-- /container-fluid -->
-
-</form><!-- /masterSearchForm -->
 
 <style>
 .suggestion-tag {

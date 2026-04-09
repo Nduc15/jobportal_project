@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.db.models import Count, Q
 from django.core.paginator import Paginator
 from django.contrib.auth import get_user_model
-from .models import Job, Application
+from .models import Job, Application, SavedJob
 
 User = get_user_model()
 def index(request):
@@ -35,9 +35,15 @@ def index(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
+    # Lấy danh sách ID các việc làm đã lưu nếu là ứng viên
+    saved_job_ids = []
+    if request.user.is_authenticated and request.user.is_candidate:
+        saved_job_ids = SavedJob.objects.filter(user=request.user).values_list('job_id', flat=True)
+
     context = {
         'jobs': page_obj,      
         'page_obj': page_obj,
+        'saved_job_ids': saved_job_ids,
         # Giữ lại giá trị filter để hiển thị lại trên form
         'q': q,
         'selected_location': location,
@@ -123,11 +129,15 @@ def candidate_dashboard(request):
     accepted_count = applications.filter(status='Accepted').count()
     pending_count = applications.filter(status='Pending').count()
 
+    # Lấy thêm danh sách việc làm đã lưu
+    saved_jobs = SavedJob.objects.filter(user=request.user).select_related('job', 'job__employer').order_by('-saved_at')
+
     context = {
         'applications': applications,
         'total_applications': total_applications,
         'accepted_count': accepted_count,
         'pending_count': pending_count,
+        'saved_jobs': saved_jobs,
     }
     return render(request, 'dashboard/candidate_dashboard.html', context)
 
@@ -356,9 +366,15 @@ def job_detail(request, job_id):
     if request.user.is_authenticated and request.user.is_candidate:
         has_applied = Application.objects.filter(job=job, candidate=request.user).exists()
 
+    # Kiểm tra xem đã lưu việc này chưa
+    is_saved = False
+    if request.user.is_authenticated and request.user.is_candidate:
+        is_saved = SavedJob.objects.filter(user=request.user, job=job).exists()
+
     context = {
         'job': job,
         'has_applied': has_applied,
+        'is_saved': is_saved,
     }
     return render(request, 'jobs/job_detail.html', context)
 
@@ -377,3 +393,24 @@ def toggle_job_status(request, job_id):
     status_text = "Đã duyệt" if job.is_approved else "Đã hủy duyệt"
     messages.success(request, f'Đã cập nhật trạng thái tin "{job.title}" thành: {status_text}')
     return redirect('employer_dashboard')
+
+# ========== LƯU VIỆC LÀM (Toggle Save) ==========
+@login_required
+def toggle_save_job(request, job_id):
+    """Bật/tắt trạng thái lưu việc làm của ứng viên."""
+    if not request.user.is_candidate:
+        messages.error(request, "Chỉ tài khoản Ứng viên mới có thể lưu việc làm.")
+        return redirect('home')
+
+    job = get_object_or_404(Job, id=job_id)
+    saved_item = SavedJob.objects.filter(user=request.user, job=job)
+
+    if saved_item.exists():
+        saved_item.delete()
+        messages.info(request, f'Đã bỏ lưu: {job.title}')
+    else:
+        SavedJob.objects.create(user=request.user, job=job)
+        messages.success(request, f'Đã lưu thành công: {job.title}')
+
+    # Quay lại trang trước đó hoặc trang chủ
+    return redirect(request.META.get('HTTP_REFERER', 'home'))

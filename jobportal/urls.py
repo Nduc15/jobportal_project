@@ -62,6 +62,9 @@ urlpatterns = [
 
     # Thao tác Admin
     path('jobs/<int:job_id>/toggle-status/', views.toggle_job_status, name='toggle_job_status'),
+
+    # Lưu việc làm yêu thích
+    path('jobs/<int:job_id>/save/', views.toggle_save_job, name='toggle_save_job'),
 ]
 
 # Serve media files trong môi trường phát triển (DEBUG=True)

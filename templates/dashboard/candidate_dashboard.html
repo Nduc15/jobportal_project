@@ -113,4 +113,48 @@
     </div>
 </div>
 
+<!-- Saved Jobs Section -->
+<div class="dash-card mt-5 mb-5">
+    <div class="dash-card-header d-flex justify-content-between align-items-center">
+        <h4><i class="fas fa-heart text-danger"></i> Việc làm đã lưu</h4>
+        <span class="badge rounded-pill bg-light text-dark shadow-sm">{{ saved_jobs.count }} tin đã lưu</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover dash-table">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Tên công việc</th>
+                    <th scope="col">Công ty</th>
+                    <th scope="col">Ngày lưu</th>
+                    <th scope="col" class="text-center">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in saved_jobs %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td class="fw-bold"><a href="{% url 'job_detail' item.job.id %}" style="text-decoration: none; color: #0a2540;">{{ item.job.title }}</a></td>
+                    <td>{{ item.job.employer.company_name|default:"Công ty" }}</td>
+                    <td>{{ item.saved_at|date:"d/m/Y" }}</td>
+                    <td class="text-center">
+                        <a href="{% url 'toggle_save_job' item.job.id %}" class="btn btn-sm btn-outline-danger" title="Bỏ lưu" style="border-radius: 8px;">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                        <a href="{% url 'job_detail' item.job.id %}" class="btn btn-sm btn-outline-primary ms-1" style="border-radius: 8px;">
+                            Xem <i class="fas fa-external-link-alt ms-1"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-5">
+                        <p class="text-muted"><i class="far fa-heart me-1"></i> Bạn chưa lưu việc làm nào.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

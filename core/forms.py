@@ -16,7 +16,7 @@ class UserProfileForm(forms.ModelForm):
 class JobForm(forms.ModelForm):
     class Meta:
         model = Job
-        fields = ['title', 'description', 'salary_min', 'salary_max', 'location']
+        fields = ['title', 'description', 'requirements', 'salary_min', 'salary_max', 'location']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -24,8 +24,12 @@ class JobForm(forms.ModelForm):
             }),
             'description': forms.Textarea(attrs={
                 'class': 'form-control',
-                'rows': 6,
-                'placeholder': 'Mô tả chi tiết công việc, yêu cầu, quyền lợi...',
+                'rows': 4,
+                'placeholder': 'Mô tả chi tiết công việc, quyền lợi...',
+            }),
+            'requirements': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ví dụ: Python, Django, ReactJS (Phân cách bằng dấu phẩy)',
             }),
             'salary_min': forms.NumberInput(attrs={
                 'class': 'form-control',
@@ -43,6 +47,7 @@ class JobForm(forms.ModelForm):
         labels = {
             'title': 'Tiêu đề công việc',
             'description': 'Mô tả công việc',
+            'requirements': 'Yêu cầu kỹ năng (Tags)',
             'salary_min': 'Lương tối thiểu (Triệu VNĐ)',
             'salary_max': 'Lương tối đa (Triệu VNĐ)',
             'location': 'Địa điểm làm việc',

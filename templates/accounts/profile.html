@@ -13,14 +13,6 @@
             </div>
             <div class="card-body px-5 pb-5">
                 
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
 
                 <form method="POST" action="{% url 'profile' %}" enctype="multipart/form-data">
                     {% csrf_token %}

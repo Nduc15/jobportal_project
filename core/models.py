@@ -36,9 +36,17 @@ class Job(models.Model):
     
     employer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='jobs')
     is_approved = models.BooleanField(default=False, db_index=True)
+    requirements = models.CharField(max_length=500, blank=True, null=True, verbose_name="Yêu cầu kỹ năng")
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def requirements_list(self):
+        """Trả về danh sách các tag từ chuỗi requirements (ví dụ: 'Python, Django' -> ['Python', 'Django'])"""
+        if self.requirements:
+            return [tag.strip() for tag in self.requirements.split(',') if tag.strip()]
+        return []
 
     def clean(self):
         if self.salary_min and self.salary_max and self.salary_min > self.salary_max:
@@ -77,3 +85,15 @@ class Application(models.Model):
 
     def __str__(self):
         return f"{self.candidate.username} nộp {self.job.title}"
+
+class SavedJob(models.Model):
+    """Lưu trữ các công việc mà ứng viên đã đánh dấu yêu thích."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_jobs')
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='saved_by')
+    saved_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'job')
+
+    def __str__(self):
+        return f"{self.user.username} đã lưu {self.job.title}"
