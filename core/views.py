@@ -7,6 +7,23 @@ from django.db.models import Count, Q
 from django.core.paginator import Paginator
 from django.contrib.auth import get_user_model
 from .models import Job, Application, SavedJob
+import bleach
+from bleach.css_sanitizer import CSSSanitizer
+
+# Cấu hình các thẻ HTML được phép cho bộ soạn thảo Rich Text
+ALLOWED_TAGS = [
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'p', 'br', 'strong', 'em', 'u', 's',
+    'ul', 'ol', 'li', 'blockquote', 'code', 'pre',
+    'a', 'span', 'img'
+]
+ALLOWED_ATTRIBUTES = {
+    'a': ['href', 'title', 'target'],
+    'span': ['class', 'style'],
+    'p': ['class', 'style'],
+    'img': ['src', 'alt', 'width', 'height', 'style'],
+}
+ALLOWED_STYLES = ['color', 'background-color', 'font-size', 'text-align']
 
 User = get_user_model()
 def index(request):
@@ -18,6 +35,7 @@ def index(request):
     location  = request.GET.get('location', '').strip()
     job_type  = request.GET.get('job_type', '').strip()
     experience = request.GET.get('experience', '').strip()
+    salary = request.GET.get('salary', '').strip()
     
     # 2. Áp dụng bộ lọc
     if q:
@@ -30,7 +48,17 @@ def index(request):
     if experience:
         jobs = jobs.filter(description__icontains=experience)
         
-    # 3. Phân trang
+    # 3. Lọc theo mức lương
+    if salary == '0_10':
+        jobs = jobs.filter(salary_max__lte=10)
+    elif salary == '10_20':
+        jobs = jobs.filter(salary_min__gte=10, salary_max__lte=20)
+    elif salary == '20_50':
+        jobs = jobs.filter(salary_min__gte=20, salary_max__lte=50)
+    elif salary == '50_plus':
+        jobs = jobs.filter(salary_min__gte=50)
+        
+    # 4. Phân trang
     paginator = Paginator(jobs, 9)  # 9 jobs / trang (3x3 grid)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -49,6 +77,7 @@ def index(request):
         'selected_location': location,
         'selected_job_type': job_type,
         'selected_experience': experience,
+        'selected_salary': salary,
     }
     return render(request, 'index.html', context)
 def register(request):
@@ -307,6 +336,20 @@ def create_job(request):
             job = form.save(commit=False)
             job.employer = request.user
             job.is_approved = False
+            
+            # Làm sạch dữ liệu description (XSS Protection)
+            raw_description = form.cleaned_data.get('description', '')
+            # Khởi tạo bộ lọc CSS (cho phép đổi màu chữ, căn lề...)
+            css_sanitizer = CSSSanitizer(allowed_css_properties=ALLOWED_STYLES)
+            
+            job.description = bleach.clean(
+                raw_description,
+                tags=ALLOWED_TAGS,
+                attributes=ALLOWED_ATTRIBUTES,
+                css_sanitizer=css_sanitizer,
+                strip=True
+            )
+            
             job.save()
             messages.success(request, f'Đăng tin "{job.title}" thành công! Tin đang chờ Admin duyệt.')
             return redirect('employer_dashboard')
@@ -330,6 +373,20 @@ def edit_job(request, job_id):
         if form.is_valid():
             job = form.save(commit=False)
             job.is_approved = False  # Reset về chờ duyệt khi sửa
+
+            # Làm sạch dữ liệu description (XSS Protection)
+            raw_description = form.cleaned_data.get('description', '')
+            # Khởi tạo bộ lọc CSS (cho phép đổi màu chữ, căn lề...)
+            css_sanitizer = CSSSanitizer(allowed_css_properties=ALLOWED_STYLES)
+            
+            job.description = bleach.clean(
+                raw_description,
+                tags=ALLOWED_TAGS,
+                attributes=ALLOWED_ATTRIBUTES,
+                css_sanitizer=css_sanitizer,
+                strip=True
+            )
+            
             job.save()
             messages.success(request, f'Cập nhật tin "{job.title}" thành công! Tin sẽ được Admin duyệt lại.')
             return redirect('employer_dashboard')

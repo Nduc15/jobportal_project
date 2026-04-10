@@ -19,9 +19,9 @@
     {% for job in jobs %}
     <div class="job-card">
         <div class="job-title">{{ job.title }}</div>
-        <div class="company"><i class="fas fa-building"></i> {{ job.employer.company_name }}</div>
+        <div class="company"><i class="fas fa-building"></i> <span>{{ job.employer.company_name }}</span></div>
         <div><span class="salary"><i class="fas fa-coins"></i> {{ job.salary_min|floatformat:0 }} - {{ job.salary_max|floatformat:0 }} triệu</span></div>
-        <div class="location"><i class="fas fa-map-pin"></i> {{ job.location }}</div>
+        <div class="location"><i class="fas fa-map-pin"></i> <span>{{ job.location }}</span></div>
         <div style="margin-top: 12px;">
             <button class="btn-apply" style="background:none; border:1px solid #1a7f6b; border-radius:40px; padding:6px 16px;">Ứng tuyển →</button>
         </div>

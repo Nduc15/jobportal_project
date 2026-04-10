@@ -82,7 +82,7 @@
 
     <!-- Sidebar Bộ Lọc -->
     <div class="col-lg-2 col-md-3">
-        <div style="background: #f8fafc; padding: 25px 15px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+        <div class="filter-sidebar card border-0 shadow-sm p-3" style="border-radius: 16px;">
             <h6 class="text-uppercase fw-bold mb-4" style="color: #475569; font-size: 0.8rem; letter-spacing: 1px;">Bộ lọc tìm kiếm</h6>
 
             <!-- Hình thức làm việc -->
@@ -137,8 +137,42 @@
                 </div>
             </div>
 
-            <a href="{% url 'home' %}" class="btn btn-outline-success w-100 fw-bold mt-1" style="border-radius: 8px; font-size: 0.85rem;">
-                <i class="fas fa-times me-1"></i> Xoá bộ lọc
+            <hr style="border-top: 1px solid #e2e8f0;">
+
+            <!-- Mức lương -->
+            <div class="mb-4">
+                <p class="fw-bold mb-3 text-dark" style="font-size: 0.9rem;">Mức lương</p>
+                <div class="d-flex align-items-center mb-2">
+                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="salary" id="sal_all" value="" form="masterSearchForm"
+                           {% if not selected_salary %}checked{% endif %}>
+                    <label class="ms-2 text-secondary mb-0" for="sal_all" style="font-size: 0.85rem;">Tất cả</label>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="salary" id="sal_0_10" value="0_10" form="masterSearchForm"
+                           {% if selected_salary == '0_10' %}checked{% endif %}>
+                    <label class="ms-2 text-secondary mb-0" for="sal_0_10" style="font-size: 0.85rem;">Dưới 10 triệu</label>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="salary" id="sal_10_20" value="10_20" form="masterSearchForm"
+                           {% if selected_salary == '10_20' %}checked{% endif %}>
+                    <label class="ms-2 text-secondary mb-0" for="sal_10_20" style="font-size: 0.85rem;">10 - 20 triệu</label>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="salary" id="sal_20_50" value="20_50" form="masterSearchForm"
+                           {% if selected_salary == '20_50' %}checked{% endif %}>
+                    <label class="ms-2 text-secondary mb-0" for="sal_20_50" style="font-size: 0.85rem;">20 - 50 triệu</label>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <input class="form-check-input mt-0 sidebar-filter" type="radio" name="salary" id="sal_50_plus" value="50_plus" form="masterSearchForm"
+                           {% if selected_salary == '50_plus' %}checked{% endif %}>
+                    <label class="ms-2 text-secondary mb-0" for="sal_50_plus" style="font-size: 0.85rem;">Trên 50 triệu</label>
+                </div>
+            </div>
+
+            <hr style="border-top: 1px solid #e2e8f0;" class="my-4">
+            
+            <a href="{% url 'home' %}" class="btn btn-reset-filter w-100 fw-bold" style="border-radius: 10px; font-size: 0.85rem; padding: 12px;">
+                <i class="fas fa-redo-alt me-1"></i> Xoá bộ lọc
             </a>
         </div>
     </div>
@@ -154,12 +188,12 @@
                          onclick="location.href='{% url 'job_detail' job.id %}'">
                         
                         <div class="card-body p-4 d-flex flex-column gap-3">
-                            <div class="d-flex align-items-center gap-3">
+                            <div class="d-flex align-items-start gap-3">
                                 {% if job.employer.avatar %}
-                                    <img src="{{ job.employer.avatar.url }}" alt="Logo" class="shadow-sm"
+                                    <img src="{{ job.employer.avatar.url }}" alt="Logo" class="shadow-sm mt-1"
                                          style="width: 48px; height: 48px; border-radius: 12px; object-fit: cover; flex-shrink: 0;">
                                 {% else %}
-                                    <div class="company-logo d-flex align-items-center justify-content-center fw-bold text-white shadow-sm"
+                                    <div class="company-logo d-flex align-items-center justify-content-center fw-bold text-white shadow-sm mt-1"
                                          style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #f97316, #ea580c); font-size: 1.4rem; flex-shrink: 0;">
                                         {{ job.employer.company_name|default:"C"|first }}
                                     </div>
@@ -185,8 +219,8 @@
                             {% endif %}
 
                             <div class="job-meta mt-auto">
-                                <p class="card-text mb-2 d-flex align-items-center text-muted" style="font-size: 0.88rem;">
-                                    <i class="fas fa-map-marker-alt me-2" style="color: #94a3b8;"></i>
+                                <p class="card-text mb-2 d-flex align-items-start text-muted" style="font-size: 0.88rem;">
+                                    <i class="fas fa-map-marker-alt me-2 mt-1" style="color: #94a3b8;"></i>
                                     <strong>{{ job.location }}</strong>
                                 </p>
                                 <p class="card-text mb-0 d-flex align-items-center fw-bold" style="color: #059669; font-size: 0.9rem;">
@@ -296,6 +330,23 @@
 .card-hover:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 30px rgba(0,0,0,0.1) !important;
+}
+.filter-sidebar {
+    background: #fff;
+    border: 1px solid #f1f5f9 !important;
+    position: sticky;
+    top: 100px;
+}
+.btn-reset-filter {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    transition: all 0.3s;
+}
+.btn-reset-filter:hover {
+    background: #fff1f2;
+    border-color: #fecaca;
+    color: #ef4444;
 }
 </style>
 
