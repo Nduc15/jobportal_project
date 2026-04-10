@@ -216,9 +216,9 @@ document.addEventListener('DOMContentLoaded', function() {
             {% if jobs %}
                 {% for job in jobs %}
                 <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card h-100 border-0 shadow-sm card-hover" 
+                    <div class="card h-100 border-0 shadow-sm card-hover job-card" 
                          style="border-radius: 16px; transition: all 0.2s; cursor: pointer; overflow: hidden;"
-                         onclick="location.href='{% url 'job_detail' job.id %}'">
+                         data-url="{% url 'job_detail' job.id %}">
                         
                         <div class="card-body p-4 d-flex flex-column gap-3">
                             <div class="d-flex align-items-start gap-3">
@@ -275,8 +275,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 
                                 <!-- Nút Lưu (Trái tim) -->
                                 {% if user.is_authenticated and user.is_candidate %}
-                                    <a href="{% url 'toggle_save_job' job.id %}" class="btn btn-sm p-0 d-flex align-items-center justify-content-center shadow-none save-btn" 
-                                       style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #e2e8f0; color: {% if job.id in saved_job_ids %}#ef4444{% else %}#94a3b8{% endif %}; background: white; transition: all 0.2s; flex-shrink: 0;"
+                                    <a href="{% url 'toggle_save_job' job.id %}" class="btn btn-sm p-0 d-flex align-items-center justify-content-center shadow-none save-btn {% if job.id in saved_job_ids %}active{% endif %}" 
+                                       style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #e2e8f0; background: white; transition: all 0.2s; flex-shrink: 0;"
                                        onclick="event.stopPropagation();" title="Lưu việc làm">
                                         {% if job.id in saved_job_ids %}
                                             <i class="fas fa-heart"></i>
@@ -381,6 +381,12 @@ document.addEventListener('DOMContentLoaded', function() {
     border-color: #fecaca;
     color: #ef4444;
 }
+.save-btn {
+    color: #94a3b8;
+}
+.save-btn.active {
+    color: #ef4444;
+}
 </style>
 
 <script>
@@ -406,6 +412,12 @@ function quickSearch(keyword, field = 'q') {
 document.querySelectorAll('.sidebar-filter').forEach(function(el) {
     el.addEventListener('change', function() {
         document.getElementById('masterSearchForm').submit();
+    });
+});
+// Click vào Card Job để xem chi tiết
+document.querySelectorAll('.job-card').forEach(card => {
+    card.addEventListener('click', function() {
+        window.location.href = this.dataset.url;
     });
 });
 </script>
