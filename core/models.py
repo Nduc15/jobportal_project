@@ -18,6 +18,7 @@ class User(AbstractUser):
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     skills = models.CharField(max_length=500, blank=True, null=True)
     default_cv = models.FileField(upload_to='cvs/defaults/', null=True, blank=True, validators=[FileExtensionValidator(allowed_extensions=['pdf', 'docx']), validate_file_size])
+    company_description = models.TextField(blank=True, null=True, verbose_name="Mô tả công ty")
     
     def clean(self):
         if self.is_employer and self.is_candidate:
@@ -28,6 +29,19 @@ class User(AbstractUser):
         super().save(*args, **kwargs)
 
 class Job(models.Model):
+    EXPERIENCE_CHOICES = [
+        ('Không yêu cầu', 'Không yêu cầu'),
+        ('Thực tập / Fresher', 'Thực tập / Fresher'),
+        ('1 - 3 năm', '1 - 3 năm'),
+        ('Trên 3 năm', 'Trên 3 năm'),
+    ]
+    
+    JOB_TYPE_CHOICES = [
+        ('Toàn thời gian', 'Toàn thời gian'),
+        ('Bán thời gian', 'Bán thời gian'),
+        ('Làm từ xa', 'Làm từ xa'),
+    ]
+
     title = models.CharField(max_length=200)
     description = models.TextField()
     salary_min = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -37,6 +51,11 @@ class Job(models.Model):
     employer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='jobs')
     is_approved = models.BooleanField(default=False, db_index=True)
     requirements = models.CharField(max_length=500, blank=True, null=True, verbose_name="Yêu cầu kỹ năng")
+    
+    # Các trường đã được chuẩn hóa
+    experience = models.CharField(max_length=100, choices=EXPERIENCE_CHOICES, default='Không yêu cầu', verbose_name="Kinh nghiệm")
+    job_type = models.CharField(max_length=100, choices=JOB_TYPE_CHOICES, default='Toàn thời gian', verbose_name="Hình thức làm việc")
+    quantity = models.PositiveIntegerField(default=1, verbose_name="Số lượng tuyển")
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

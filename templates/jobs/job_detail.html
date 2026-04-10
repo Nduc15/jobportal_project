@@ -5,7 +5,7 @@
 {% block title %}{{ job.title }} - JobPortal PTIT{% endblock %}
 
 {% block content %}
-<div class="container py-5" style="max-width: 900px;">
+<div class="container py-5" style="max-width: 1100px;">
 
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-4">
@@ -101,65 +101,159 @@
                         </div>
                     </div>
 
-                    <!-- Nút ứng tuyển logic mới -->
-                    {% if user.is_authenticated %}
-                        {% if user.is_candidate %}
-                            {% if has_applied %}
-                                <button class="btn btn-lg w-100 mb-3 fw-bold" style="background: #e0f7ea; color: #1e6f3f; border: none; border-radius: 12px; padding: 14px; cursor: default;" disabled>
-                                    <i class="fas fa-check-circle me-2"></i> Đã ứng tuyển thành công
-                                </button>
-                                <p class="text-center text-muted small"><i class="fas fa-info-circle"></i> Bạn đã nộp CV cho công việc này.</p>
-                            {% else %}
-                                <form method="POST" action="{% url 'apply_job' job.id %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-lg w-100 mb-3 text-white fw-bold" style="background: linear-gradient(135deg, #00b14f, #009643); border: none; border-radius: 12px; padding: 14px;">
-                                        <i class="fas fa-paper-plane me-2"></i> Ứng tuyển ngay
-                                    </button>
-                                </form>
-                                <p class="text-center text-muted small">Nộp đơn nhanh bằng CV gốc của bạn</p>
-                            {% endif %}
-                        {% elif user.is_employer or user.is_superuser %}
-                            <div class="alert alert-info border-0 mb-3" style="background: #eff6ff; color: #1d4ed8; border-radius: 12px; font-size: 0.85rem;">
-                                <i class="fas fa-info-circle me-1"></i> Bạn đang xem với tư cách 
-                                <strong>{% if user.is_superuser %}Quản trị viên{% else %}Nhà tuyển dụng{% endif %}</strong>.
+                    <!-- Thông tin chung (The Scannable List) -->
+                    <div class="mb-4 pt-2">
+                        <h6 class="fw-bold mb-3" style="color: #0a2540;">Thông tin chung</h6>
+                        <div class="d-flex flex-column gap-4">
+                            <!-- Lương -->
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #f1f5f9; border-radius: 10px; flex-shrink: 0;">
+                                    <i class="fas fa-wallet" style="color: #64748b; font-size: 1rem;"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block mb-0" style="font-size: 0.75rem; font-weight: 500;">Mức lương</small>
+                                    <span class="fw-bold" style="font-size: 0.95rem; color: #1e293b;">
+                                        {% if not job.salary_min and not job.salary_max or job.salary_min == 0 and job.salary_max == 0 %}
+                                            Thỏa thuận
+                                        {% else %}
+                                            {{ job.salary_min|floatformat:0 }} - {{ job.salary_max|floatformat:0 }} Triệu VNĐ
+                                        {% endif %}
+                                    </span>
+                                </div>
                             </div>
-                        {% endif %}
 
-                        <!-- Khu vực nút bấm phụ -->
-                        <div class="mt-4 pt-3" style="border-top: 1px dashed #e2e8f0;">
-                            <!-- Nút Lưu việc làm (Chỉ Ứng viên) -->
-                            {% if user.is_authenticated and user.is_candidate %}
-                            <div class="mb-2">
-                                <a href="{% url 'toggle_save_job' job.id %}" class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2" 
-                                   style="background: #f8fafc; color: {% if is_saved %}#ef4444{% else %}#64748b{% endif %}; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; transition: all 0.2s;">
-                                    {% if is_saved %}
-                                        <i class="fas fa-heart"></i> Đã lưu việc làm
-                                    {% else %}
-                                        <i class="far fa-heart"></i> Lưu tin này
-                                    {% endif %}
+                            <!-- Kinh nghiệm -->
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #f1f5f9; border-radius: 10px; flex-shrink: 0;">
+                                    <i class="fas fa-briefcase" style="color: #64748b; font-size: 1rem;"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block mb-0" style="font-size: 0.75rem; font-weight: 500;">Kinh nghiệm</small>
+                                    <span class="fw-bold" style="font-size: 0.95rem; color: #1e293b;">
+                                        {% if job.experience == "Không y/c" or not job.experience %}
+                                            Không yêu cầu
+                                        {% else %}
+                                            {{ job.experience }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Hình thức -->
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #f1f5f9; border-radius: 10px; flex-shrink: 0;">
+                                    <i class="fas fa-layer-group" style="color: #64748b; font-size: 1rem;"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block mb-0" style="font-size: 0.75rem; font-weight: 500;">Hình thức làm việc</small>
+                                    <span class="fw-bold" style="font-size: 0.95rem; color: #1e293b;">{{ job.job_type|default:"Toàn thời gian" }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Hạn nộp -->
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #ecfdf5; border-radius: 10px; flex-shrink: 0;">
+                                    <i class="fas fa-calendar-check" style="color: #10b981; font-size: 1rem;"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block mb-0" style="font-size: 0.75rem; font-weight: 500;">Hạn nộp hồ sơ</small>
+                                    <span class="fw-bold" style="font-size: 0.95rem; color: #059669;">Đang mở</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nút ứng tuyển logic -->
+                    <div class="mt-4">
+                        {% if user.is_authenticated %}
+                            {% if user.is_candidate %}
+                                {% if has_applied %}
+                                    <button class="btn btn-lg w-100 mb-3 fw-bold" style="background: #e0f7ea; color: #1e6f3f; border: none; border-radius: 12px; padding: 14px; cursor: default;" disabled>
+                                        <i class="fas fa-check-circle me-2"></i> Đã ứng tuyển thành công
+                                    </button>
+                                    <p class="text-center text-muted small"><i class="fas fa-info-circle"></i> Bạn đã nộp CV cho công việc này.</p>
+                                {% else %}
+                                    <form method="POST" action="{% url 'apply_job' job.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-lg w-100 mb-3 btn-apply-now">
+                                            <i class="fas fa-paper-plane me-2"></i> Ứng tuyển ngay
+                                        </button>
+                                    </form>
+                                    <p class="text-center text-muted small">Nộp đơn nhanh bằng CV gốc của bạn</p>
+                                {% endif %}
+                            {% elif user.is_employer or user.is_superuser %}
+                                <div class="alert alert-info border-0 mb-3" style="background: #eff6ff; color: #1d4ed8; border-radius: 12px; font-size: 0.85rem;">
+                                    <i class="fas fa-info-circle me-1"></i> Bạn đang xem với tư cách 
+                                    <strong>{% if user.is_superuser %}Quản trị viên{% else %}Nhà tuyển dụng{% endif %}</strong>.
+                                </div>
+                            {% endif %}
+    
+                            <!-- Khu vực nút bấm phụ -->
+                            <div class="mt-4 pt-3" style="border-top: 1px dashed #e2e8f0;">
+                                <!-- Nút Lưu việc làm (Chỉ Ứng viên) -->
+                                {% if user.is_authenticated and user.is_candidate %}
+                                <div class="mb-2">
+                                    <a href="{% url 'toggle_save_job' job.id %}" class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2" 
+                                       style="background: #f8fafc; color: {% if is_saved %}#ef4444{% else %}#64748b{% endif %}; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; transition: all 0.2s;">
+                                        {% if is_saved %}
+                                            <i class="fas fa-heart"></i> Đã lưu việc làm
+                                        {% else %}
+                                            <i class="far fa-heart"></i> Lưu tin này
+                                        {% endif %}
+                                    </a>
+                                </div>
+                                {% endif %}
+    
+                                <!-- Nút Xem trang công ty -->
+                                <a href="{% url 'company_detail' job.employer.id %}" class="btn btn-outline-light w-100 fw-bold d-flex align-items-center justify-content-center gap-2" 
+                                   style="color: #64748b; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; background: white; transition: all 0.2s;">
+                                    <i class="fas fa-building"></i> Xem trang công ty
                                 </a>
                             </div>
-                            {% endif %}
-
-                            <!-- Nút Xem trang công ty -->
-                            <a href="{% url 'company_detail' job.employer.id %}" class="btn btn-outline-light w-100 fw-bold d-flex align-items-center justify-content-center gap-2" 
-                               style="color: #64748b; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; background: white; transition: all 0.2s;">
-                                <i class="fas fa-building"></i> Xem trang công ty
+                        {% else %}
+                            <!-- Cho khách chưa đăng nhập -->
+                            <a href="{% url 'login' %}" class="btn btn-lg w-100 mb-3 text-white fw-bold" style="background: linear-gradient(135deg, #00b14f, #009643); border: none; border-radius: 12px; padding: 14px; text-decoration: none;">
+                                <i class="fas fa-sign-in-alt me-2"></i> Đăng nhập để ứng tuyển
                             </a>
-                        </div>
-                    {% else %}
-                        <!-- Cho khách chưa đăng nhập -->
-                        <a href="{% url 'login' %}" class="btn btn-lg w-100 mb-3 text-white fw-bold" style="background: linear-gradient(135deg, #00b14f, #009643); border: none; border-radius: 12px; padding: 14px; text-decoration: none;">
-                            <i class="fas fa-sign-in-alt me-2"></i> Đăng nhập để ứng tuyển
-                        </a>
-                        <a href="{% url 'company_detail' job.employer.id %}" class="btn btn-outline-light w-100 fw-bold d-flex align-items-center justify-content-center gap-2" 
-                            style="color: #64748b; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; background: white;">
-                             <i class="fas fa-building"></i> Xem trang công ty
-                         </a>
-                    {% endif %}
+                            <a href="{% url 'company_detail' job.employer.id %}" class="btn btn-outline-light w-100 fw-bold d-flex align-items-center justify-content-center gap-2" 
+                                style="color: #64748b; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; background: white;">
+                                 <i class="fas fa-building"></i> Xem trang công ty
+                             </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const applyButtons = document.querySelectorAll('.btn-apply-now');
+    
+    applyButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            // Chỉ tạo hiệu ứng nếu không phải submit form hoặc xử lý thủ công
+            // Ở đây form sẽ submit ngay, nhưng ripple vẫn kịp hiển thị 0.6s
+            
+            const rect = this.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            ripple.style.left = `${x}px`;
+            ripple.style.top = `${y}px`;
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+});
+</script>
 {% endblock %}

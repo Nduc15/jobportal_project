@@ -37,16 +37,45 @@ def index(request):
     experience = request.GET.get('experience', '').strip()
     salary = request.GET.get('salary', '').strip()
     
-    # 2. Áp dụng bộ lọc
+    # 2. Chuẩn hóa dữ liệu (Normalization) & Áp dụng bộ lọc
+    # Mapping các từ khóa phổ thông sang giá trị chuẩn trong DB
+    mapping = {
+        'junior': '1 - 3 năm',
+        'senior': 'Trên 3 năm',
+        'fresher': 'Thực tập / Fresher',
+        'không yêu cầu kn': 'Không yêu cầu',
+        'không yêu cầu kinh nghiệm': 'Không yêu cầu',
+        'không kinh nghiệm': 'Không yêu cầu',
+        '0 năm': 'Không yêu cầu',
+        '1 năm': '1 - 3 năm',
+        '2 năm': '1 - 3 năm',
+        '3 năm': '1 - 3 năm',
+        '4 năm': 'Trên 3 năm',
+        '5 năm': 'Trên 3 năm',
+    }
+
     if q:
-        jobs = jobs.filter(Q(title__icontains=q) | Q(description__icontains=q))
+        search_q = q.lower()
+        # Nếu người dùng gõ từ khóa có trong mapping, dùng giá trị chuẩn để tìm kiếm
+        if search_q in mapping:
+            normalized_q = mapping[search_q]
+        else:
+            normalized_q = q
+
+        jobs = jobs.filter(
+            Q(title__icontains=normalized_q) | 
+            Q(description__icontains=normalized_q) |
+            Q(experience__icontains=normalized_q) |
+            Q(job_type__icontains=normalized_q) |
+            Q(employer__company_name__icontains=normalized_q)
+        )
     if location:
         jobs = jobs.filter(location__icontains=location)
-    # job_type và experience lọc theo mô tả (vì model chưa có field riêng)
+    # job_type và experience lọc theo các trường chuyên biệt (dùng icontains để linh hoạt hơn với dữ liệu cũ)
     if job_type:
-        jobs = jobs.filter(description__icontains=job_type)
+        jobs = jobs.filter(job_type__icontains=job_type)
     if experience:
-        jobs = jobs.filter(description__icontains=experience)
+        jobs = jobs.filter(experience__icontains=experience)
         
     # 3. Lọc theo mức lương
     if salary == '0_10':

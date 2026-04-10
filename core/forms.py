@@ -5,22 +5,59 @@ from .models import User, Job, Application
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['avatar', 'phone_number', 'skills', 'default_cv']
+        fields = ['avatar', 'first_name', 'company_name', 'phone_number', 'skills', 'default_cv', 'company_description']
         widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nhập họ và tên đầy đủ'}),
+            'company_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nhập tên công ty'}),
             'phone_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ví dụ: 0912345678'}),
             'skills': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Ví dụ: Python, Django, ReactJS...'}),
             'avatar': forms.FileInput(attrs={'class': 'd-none', 'id': 'avatar_upload', 'accept': 'image/*'}),
             'default_cv': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': '.pdf,.doc,.docx'}),
+            'company_description': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'Giới thiệu ngắn gọn về công ty của bạn...'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance:
+            if self.instance.is_superuser:
+                # Nếu là Admin (Superuser): Xóa các trường đặc thù của cả NTD và Ứng viên
+                fields_to_remove = ['company_name', 'skills', 'default_cv', 'company_description']
+                for field in fields_to_remove:
+                    if field in self.fields:
+                        del self.fields[field]
+            elif self.instance.is_employer:
+                # Nếu là Nhà tuyển dụng: Giữ Tên công ty, Xóa Họ tên và các trường Ứng viên
+                if 'first_name' in self.fields:
+                    del self.fields['first_name']
+                if 'skills' in self.fields:
+                    del self.fields['skills']
+                if 'default_cv' in self.fields:
+                    del self.fields['default_cv']
+            else:
+                # Nếu là Ứng viên: Giữ Họ tên, Xóa Tên công ty và Mô tả công ty
+                if 'company_name' in self.fields:
+                    del self.fields['company_name']
+                if 'company_description' in self.fields:
+                    del self.fields['company_description']
 
 class JobForm(forms.ModelForm):
     class Meta:
         model = Job
-        fields = ['title', 'description', 'requirements', 'salary_min', 'salary_max', 'location']
+        fields = ['title', 'experience', 'job_type', 'quantity', 'description', 'requirements', 'salary_min', 'salary_max', 'location']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Ví dụ: Lập trình viên Python Django',
+            }),
+            'experience': forms.Select(choices=Job.EXPERIENCE_CHOICES, attrs={
+                'class': 'form-select',
+            }),
+            'job_type': forms.Select(choices=Job.JOB_TYPE_CHOICES, attrs={
+                'class': 'form-select',
+            }),
+            'quantity': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ví dụ: 5',
             }),
             'description': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -46,6 +83,9 @@ class JobForm(forms.ModelForm):
         }
         labels = {
             'title': 'Tiêu đề công việc',
+            'experience': 'Kinh nghiệm yêu cầu',
+            'job_type': 'Hình thức làm việc',
+            'quantity': 'Số lượng tuyển (Người)',
             'description': 'Mô tả công việc',
             'requirements': 'Yêu cầu kỹ năng (Tags)',
             'salary_min': 'Lương tối thiểu (Triệu VNĐ)',

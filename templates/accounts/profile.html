@@ -34,11 +34,16 @@
                         </div>
                     </div>
 
-                    <!-- Personal Info -->
+                    <!-- Personal Info / Company Name -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Họ và tên</label>
-                            <input type="text" class="form-control" value="{{ user.first_name }}" disabled style="background-color: #f9f9f9;">
+                            {% if user.is_employer %}
+                                <label class="form-label fw-bold">Tên công ty</label>
+                                {{ form.company_name }}
+                            {% else %}
+                                <label class="form-label fw-bold">Họ và tên</label>
+                                {{ form.first_name }}
+                            {% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Email</label>
@@ -51,7 +56,8 @@
                         {{ form.phone_number }}
                     </div>
 
-                    <!-- Skills -->
+                    <!-- Skills & CV (Chỉ hiện cho Ứng viên) -->
+                    {% if user.is_candidate %}
                     <div class="mb-4">
                         <label class="form-label fw-bold">Kỹ năng chuyên môn</label>
                         {{ form.skills }}
@@ -74,6 +80,16 @@
                             {{ form.default_cv }}
                         </div>
                     </div>
+                    {% endif %}
+
+                    <!-- Giới thiệu Công ty (Chỉ hiện cho Nhà tuyển dụng) -->
+                    {% if user.is_employer %}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Giới thiệu về Công ty</label>
+                        {{ form.company_description }}
+                        <div class="form-text">Mô tả chuyên sâu về lịch sử, sứ mệnh và văn hóa công ty để thu hút nhân tài.</div>
+                    </div>
+                    {% endif %}
 
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary btn-lg" style="background-color: #0d9488; border: none; border-radius: 8px;">
