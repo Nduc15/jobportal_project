@@ -46,6 +46,9 @@ urlpatterns = [
     # Dashboard Nhà tuyển dụng
     path('dashboard/employer/', views.employer_dashboard, name='employer_dashboard'),
 
+    # Dashboard Admin
+    path('dashboard/admin/', views.admin_dashboard, name='admin_dashboard'),
+
     # Danh sách ứng viên đã nộp CV cho 1 tin tuyển dụng
     path('dashboard/employer/job/<int:job_id>/applicants/', views.applicant_list, name='applicant_list'),
 

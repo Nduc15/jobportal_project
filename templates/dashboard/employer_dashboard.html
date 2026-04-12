@@ -4,162 +4,144 @@
 {% block title %}Dashboard Nhà tuyển dụng - JobPortal PTIT{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-{% endblock %}
-
-{% block content %}
-
-<!-- Dashboard Header -->
-<div class="dashboard-hero">
-    <div class="dashboard-hero-content">
-        <div class="dashboard-avatar employer-avatar">
-            <i class="fas fa-building"></i>
-        </div>
-        <div>
-            <h2 class="dashboard-title">Dashboard Nhà tuyển dụng</h2>
-            <p class="dashboard-subtitle">Xin chào <strong>{{ user.company_name|default:user.username }}</strong>! Quản lý tin tuyển dụng và ứng viên tại đây.</p>
-        </div>
-    </div>
-    <!-- Nút đăng tin mới nổi bật -->
-    <div class="mt-3 mt-md-0">
-        <a href="{% url 'create_job' %}" class="btn btn-lg text-white fw-bold px-4 py-3" id="create-job-btn" style="background: linear-gradient(135deg, #00b14f, #009643); border: none; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,177,79,0.35); font-size: 1rem;">
-            <i class="fas fa-plus-circle me-2"></i> Đăng tin tuyển dụng mới
-        </a>
-    </div>
-</div>
-
-<!-- Stats Cards -->
-<div class="row g-4 mb-4">
-    <div class="col-md-3">
-        <div class="dash-stat-card">
-            <div class="dash-stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
-                <i class="fas fa-newspaper"></i>
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v={% now 'U' %}">
+{% endblock %}{% block content %}
+<div class="container py-4">
+    <!-- Dashboard Header -->
+    <div class="dashboard-hero">
+        <div class="dashboard-hero-content">
+            <div class="dashboard-avatar employer-avatar" style="padding: 0;">
+                {% if user.avatar %}
+                    <img src="{{ user.avatar.url }}" alt="Company Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                {% else %}
+                    <i class="fas fa-building" style="color: #475569; font-size: 20px;"></i>
+                {% endif %}
             </div>
             <div>
-                <div class="dash-stat-number">{{ total_jobs }}</div>
-                <div class="dash-stat-label">Tin đã đăng</div>
+                <h2 class="dashboard-title">Chào bạn, {{ user.company_name|default:user.username }} 👋</h2>
+                <p class="dashboard-subtitle">Quản lý các tin tuyển dụng và tìm kiếm ứng viên tiềm năng.</p>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="dash-stat-card">
-            <div class="dash-stat-icon" style="background: linear-gradient(135deg, #2ecc71, #27ae60);">
-                <i class="fas fa-check-double"></i>
-            </div>
-            <div>
-                <div class="dash-stat-number">{{ approved_jobs }}</div>
-                <div class="dash-stat-label">Đã được duyệt</div>
-            </div>
+        <!-- Nút đăng tin mới nổi bật -->
+        <div class="mt-3 mt-md-0">
+            <a href="{% url 'create_job' %}" class="btn fw-bold px-4 py-2" id="create-job-btn" style="background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 0.95rem;">
+                <i class="fas fa-plus me-2"></i> Đăng tin mới
+            </a>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="dash-stat-card">
-            <div class="dash-stat-icon" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
-                <i class="fas fa-hourglass-half"></i>
-            </div>
-            <div>
-                <div class="dash-stat-number">{{ pending_jobs }}</div>
-                <div class="dash-stat-label">Chờ Admin duyệt</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="dash-stat-card">
-            <div class="dash-stat-icon" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
-                <i class="fas fa-file-alt"></i>
-            </div>
-            <div>
-                <div class="dash-stat-number">{{ total_cvs }}</div>
-                <div class="dash-stat-label">Tổng CV nhận được</div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Job Postings Table -->
-<div class="dash-card">
-    <div class="dash-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h4 class="mb-0"><i class="fas fa-clipboard-list"></i> Danh sách tin tuyển dụng</h4>
-        <a href="{% url 'create_job' %}" class="btn btn-sm text-white fw-semibold" style="background: #00b14f; border-radius: 8px;">
-            <i class="fas fa-plus me-1"></i> Thêm tin mới
-        </a>
+    <!-- Stats Cards -->
+    <div class="row gx-4 gy-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-value">{{ total_jobs }}</div>
+                    <p class="stat-label">Tin đã đăng</p>
+                </div>
+                <div class="stat-icon" style="background: #eff6ff; color: #2563eb;">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-value" style="color: #059669;">{{ approved_jobs }}</div>
+                    <p class="stat-label">Đã được duyệt</p>
+                </div>
+                <div class="stat-icon" style="background: #ecfdf5; color: #059669;">
+                    <i class="fas fa-check-double"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-value" style="color: #d97706;">{{ pending_jobs }}</div>
+                    <p class="stat-label">Chờ duyệt</p>
+                </div>
+                <div class="stat-icon" style="background: #fffbeb; color: #d97706;">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-value">{{ total_cvs }}</div>
+                    <p class="stat-label">Tổng CV nhận</p>
+                </div>
+                <div class="stat-icon" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #475569;">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="table-responsive">
-        <table class="table table-hover dash-table" id="employer-jobs-table">
-            <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col"><i class="fas fa-heading"></i> Tiêu đề tin đăng</th>
-                    <th scope="col"><i class="fas fa-shield-alt"></i> Tình trạng</th>
-                    <th scope="col"><i class="fas fa-file-invoice"></i> CV nhận</th>
-                    <th scope="col"><i class="fas fa-cogs"></i> Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for job in jobs %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td class="fw-semibold">
-                        <a href="{% url 'job_detail' job.id %}" style="color: #0a2540; text-decoration: none;" title="Xem chi tiết">
-                            {{ job.title }}
-                        </a>
-                    </td>
-                    <td>
+
+    <!-- Job Postings Grid -->
+    <div class="row mb-4 mt-5">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 style="font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 600; color: #0f172a; margin: 0;">
+                    Danh sách tin tuyển dụng
+                </h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="row gx-4 gy-4 pb-5">
+        {% for job in jobs %}
+        <div class="col-lg-3 col-md-4 col-sm-6 d-flex align-items-stretch">
+            <div class="modern-job-card w-100">
+                <div class="mj-card-header" style="padding: 0; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+                    <h5 class="mj-title">
+                        <a href="{% url 'job_detail' job.id %}">{{ job.title }}</a>
+                    </h5>
+                    <div class="mj-company" style="font-size: 13px; color: #475569; font-weight: 400; display: flex; align-items: center; gap: 6px;">
+                        <span style="background: #eff6ff; color: #1d4ed8; font-weight: 600; padding: 2px 8px; border-radius: 6px; font-size: 11px;">{{ job.app_count }} CV nhận được</span>
+                    </div>
+                </div>
+                
+                <div class="mj-details" style="padding: 0; flex-grow: 1;">
+                    <div class="mj-detail-item" style="font-size: 13px; color: #64748b; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                        <i class="far fa-calendar-alt" style="color: #94a3b8; width: 14px;"></i> Cập nhật: <span style="font-weight: 500; color: #0f172a;">{{ job.updated_at|date:"d/m/Y"|default:"---" }}</span>
+                    </div>
+                    <div class="mj-detail-item" style="margin: 0; display: flex; align-items: center; gap: 8px; padding-top: 8px; border-top: 1px solid #f8fafc;">
+                        <span style="font-size: 13px; color: #64748b;">Trạng thái:</span> 
                         {% if job.is_approved %}
-                            <span class="badge badge-accepted"><i class="fas fa-eye"></i> Đã duyệt</span>
+                            <span class="badge-status badge-accepted" style="font-size: 11px;"><i class="fas fa-check" style="font-size: 9px;"></i> Đã duyệt</span>
                         {% else %}
-                            <span class="badge badge-pending"><i class="fas fa-eye-slash"></i> Chờ duyệt</span>
+                            <span class="badge-status badge-pending" style="font-size: 11px;">Chờ duyệt</span>
                         {% endif %}
-                    </td>
-                    <td>
-                        <span class="cv-count">{{ job.app_count }}</span>
-                    </td>
-                    <td>
-                        <div class="d-flex gap-2 flex-wrap">
-                            <a href="{% url 'applicant_list' job.id %}" class="btn btn-sm btn-outline-primary" title="Xem danh sách ứng viên" style="border-radius: 8px;">
-                                <i class="fas fa-users"></i> CV
-                            </a>
-                            
-                            {% if user.is_superuser %}
-                                {% if job.is_approved %}
-                                    <a href="{% url 'toggle_job_status' job.id %}" class="btn btn-sm btn-outline-secondary" title="Hủy duyệt bài" style="border-radius: 8px;">
-                                        <i class="fas fa-times-circle"></i> Bỏ duyệt
-                                    </a>
-                                {% else %}
-                                    <a href="{% url 'toggle_job_status' job.id %}" class="btn btn-sm btn-success" title="Duyệt bài ngay" style="border-radius: 8px;">
-                                        <i class="fas fa-check-circle"></i> Duyệt bài
-                                    </a>
-                                {% endif %}
-                            {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mj-actions" style="margin-top: 16px; display: flex; align-items: center; justify-content: flex-start; gap: 6px; padding-top: 14px; border-top: 1px solid #f1f5f9;">
+                    <a href="{% url 'applicant_list' job.id %}" class="btn" style="flex: 1; text-align: center; white-space: nowrap; font-size: 12px; padding: 6px 8px; background: #2563eb; color: white !important; border-radius: 6px; font-weight: 500;">
+                        <i class="fas fa-users me-1"></i> Quản lý CV
+                    </a>
 
-                            <a href="{% url 'edit_job' job.id %}" class="btn btn-sm btn-outline-warning" title="Chỉnh sửa tin" style="border-radius: 8px;">
-                                <i class="fas fa-pen"></i> Sửa
-                            </a>
-                            <a href="{% url 'delete_job' job.id %}" class="btn btn-sm btn-outline-danger" title="Xóa tin" style="border-radius: 8px;">
-                                <i class="fas fa-trash"></i> Xóa
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5" class="text-center">
-                        <div class="empty-state-modern py-5">
-                            <div class="d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px; border-radius: 50%; background: #f0fdf4;">
-                                <i class="fas fa-briefcase" style="font-size: 2rem; color: #00b14f;"></i>
-                            </div>
-                            <h5 style="color: #0f2b3d; font-weight: 700;">Chưa có tin tuyển dụng</h5>
-                            <p class="text-muted mb-4" style="font-size: 0.95rem; max-width: 400px; margin: 0 auto;">Bạn chưa đăng bất kỳ tin tuyển dụng nào. Nhanh tay đăng tin để tìm kiếm nhân tài ngay!</p>
-                            <a href="{% url 'create_job' %}" class="btn text-white px-4 py-2 fw-bold" style="background: linear-gradient(135deg, #00b14f, #009643); border-radius: 40px; border: none;">
-                                <i class="fas fa-plus-circle me-1"></i> Đăng tin ngay
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                    <a href="{% url 'edit_job' job.id %}" class="btn" title="Chỉnh sửa" style="padding: 6px 10px; border: 1px solid #e2e8f0; color: #475569; background: transparent; border-radius: 6px; transition: all 0.2s;" onmouseover="this.style.background='#f8fafc';" onmouseout="this.style.background='transparent';">
+                        <i class="fas fa-pen" style="font-size: 12px;"></i>
+                    </a>
+                    <a href="{% url 'delete_job' job.id %}" class="btn" title="Xóa" style="padding: 6px 10px; border: 1px solid #fee2e2; color: #ef4444; background: transparent; border-radius: 6px; transition: all 0.2s;" onmouseover="this.style.background='#fef2f2';" onmouseout="this.style.background='transparent';">
+                        <i class="fas fa-trash" style="font-size: 12px;"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5 border rounded-4 bg-white shadow-sm mt-3">
+            <div class="d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px; border-radius: 50%; background: #f0fdf4;">
+                <i class="fas fa-briefcase" style="font-size: 2rem; color: #00b14f;"></i>
+            </div>
+            <h5 style="color: #0f172a; font-weight: 700;">Chưa có tin tuyển dụng</h5>
+            <p class="text-muted mb-4" style="font-size: 0.95rem; max-width: 400px; margin: 0 auto;">Bạn chưa đăng bất kỳ tin tuyển dụng nào. Nhanh tay đăng tin để tìm kiếm nhân tài ngay!</p>
+            <a href="{% url 'create_job' %}" class="btn text-white px-4 py-2 fw-bold" style="background: #2563eb; border-radius: 8px; border: none;">
+                <i class="fas fa-plus-circle me-1"></i> Đăng tin ngay
+            </a>
+        </div>
+        {% endfor %}
     </div>
 </div>
-
 {% endblock %}

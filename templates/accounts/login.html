@@ -1,10 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
-<div class="row-split" style="display: flex; gap: 32px; margin: 40px 0;">
-    <div class="register-box card">
-        <h3>Đăng nhập</h3>
-
+<div class="d-flex justify-content-center" style="margin: 60px 0 0;">
+    <div class="register-box card" style="width: 100%; max-width: 480px;">
+        <h3 style="text-align: center; margin-bottom: 24px;">Đăng nhập</h3>
 
         <form method="POST" action="{% url 'login' %}">
             {% csrf_token %}
@@ -23,13 +22,6 @@
                 <p>Chưa có tài khoản? <a href="{% url 'register' %}" style="color: #1a7f6b; font-weight: bold; text-decoration: none;">Đăng ký ngay</a></p>
             </div>
         </form>
-    </div>
-    <div class="info-box card">
-        <h3>Lợi thế nổi bật</h3>
-        <ul>
-            <li><i class="fas fa-check-circle" style="color:#1a7f6b;"></i> Hệ sinh thái nhân sự tiên phong</li>
-            <li><i class="fas fa-check-circle" style="color:#1a7f6b;"></i> Kết nối ứng viên IT & tài chính</li>
-        </ul>
     </div>
 </div>
 {% endblock %}

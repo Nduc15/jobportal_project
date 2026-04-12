@@ -85,7 +85,7 @@ class JobForm(forms.ModelForm):
             'title': 'Tiêu đề công việc',
             'experience': 'Kinh nghiệm yêu cầu',
             'job_type': 'Hình thức làm việc',
-            'quantity': 'Số lượng tuyển (Người)',
+            'quantity': 'Số lượng tuyển',
             'description': 'Mô tả công việc',
             'requirements': 'Yêu cầu kỹ năng (Tags)',
             'salary_min': 'Lương tối thiểu (Triệu VNĐ)',

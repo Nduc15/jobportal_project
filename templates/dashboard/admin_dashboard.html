@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Quản trị - JobPortal PTIT{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v={% now 'U' %}">
+<style>
+    .admin-stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container pt-3 pb-5">
+
+<!-- Dashboard Header -->
+<div class="dashboard-hero">
+    <div class="dashboard-hero-content">
+        <div class="dashboard-avatar" style="background: #eef2ff; color: #4338ca;">
+            <i class="fas fa-user-shield"></i>
+        </div>
+        <div>
+            <h2 class="dashboard-title">Hệ thống Quản trị 👋</h2>
+            <p class="dashboard-subtitle">Chào Admin, trung tâm điều hành và quản lý nhân tài IT toàn cục.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Global Stats Cards -->
+<div class="row gx-4 gy-4 mb-4">
+    <div class="col-lg-2 col-md-4 col-sm-6">
+        <div class="stat-card flex-column text-center justify-content-center">
+            <div class="stat-icon mb-2" style="background: #f1f5f9; color: #475569;">
+                <i class="fas fa-briefcase"></i>
+            </div>
+            <div class="stat-value">{{ total_jobs }}</div>
+            <p class="stat-label">Việc làm</p>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6">
+        <div class="stat-card flex-column text-center justify-content-center">
+            <div class="stat-icon mb-2" style="background: #fffbeb; color: #d97706;">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
+            <div class="stat-value" style="color: #d97706;">{{ pending_jobs }}</div>
+            <p class="stat-label">Chờ duyệt</p>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6">
+        <div class="stat-card flex-column text-center justify-content-center">
+            <div class="stat-icon mb-2" style="background: #f0fdf4; color: #059669;">
+                <i class="fas fa-building"></i>
+            </div>
+            <div class="stat-value" style="color: #059669;">{{ total_companies }}</div>
+            <p class="stat-label">Công ty</p>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6">
+        <div class="stat-card flex-column text-center justify-content-center">
+            <div class="stat-icon mb-2" style="background: #eff6ff; color: #2563eb;">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-value" style="color: #2563eb;">{{ total_candidates }}</div>
+            <p class="stat-label">Ứng viên</p>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6">
+        <div class="stat-card flex-column text-center justify-content-center">
+            <div class="stat-icon mb-2" style="background: #fdf2f8; color: #db2777;">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <div class="stat-value" style="color: #db2777;">{{ total_cvs }}</div>
+            <p class="stat-label">Tổng CV</p>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6">
+        <div class="stat-card flex-column text-center justify-content-center" style="background: #2563eb; border-color: #2563eb;">
+            <div class="stat-icon mb-2" style="background: rgba(255,255,255,0.2); color: white;">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-value" style="color: white;">100%</div>
+            <p class="stat-label" style="color: rgba(255,255,255,0.8);">Vận hành</p>
+        </div>
+    </div>
+</div>
+
+<!-- Global Listings Management -->
+<div class="row mb-4 mt-5">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h4 style="font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 600; color: #0f172a; margin: 0;">
+                Giám sát tin tuyển dụng
+            </h4>
+        </div>
+    </div>
+</div>
+
+<div class="row gx-4 gy-4 pb-5">
+    {% for job in jobs %}
+    <div class="col-lg-3 col-md-4 col-sm-6 d-flex align-items-stretch">
+        <div class="modern-job-card w-100">
+            <div class="mj-card-header" style="padding: 0; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+                <h5 class="mj-title">
+                    <a href="{% url 'job_detail' job.id %}">{{ job.title }}</a>
+                </h5>
+                <div class="mj-company" style="font-size: 13px; color: #475569; font-weight: 400; display: flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-building" style="color: #94a3b8; font-size: 11px;"></i> {{ job.employer.company_name|default:job.employer.username|truncatechars:20 }}
+                    <span style="background: #eff6ff; color: #1d4ed8; font-weight: 600; padding: 2px 8px; border-radius: 6px; font-size: 11px;">{{ job.app_count }} CV</span>
+                </div>
+            </div>
+            
+            <div class="mj-details" style="padding: 0; flex-grow: 1;">
+                <div class="mj-detail-item" style="font-size: 13px; color: #64748b; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-user-edit" style="color: #94a3b8; width: 14px;"></i> Người đăng: <span style="font-weight: 500; color: #0f172a;">{{ job.employer.username }}</span>
+                </div>
+                <div class="mj-detail-item" style="margin: 0; display: flex; align-items: center; gap: 8px; padding-top: 8px; border-top: 1px solid #f8fafc;">
+                    <span style="font-size: 13px; color: #64748b;">Trạng thái:</span> 
+                    {% if job.is_approved %}
+                        <span class="badge-status badge-accepted" style="font-size: 11px;"><i class="fas fa-check" style="font-size: 9px;"></i> Đã duyệt</span>
+                    {% else %}
+                        <span class="badge-status badge-pending" style="font-size: 11px;">Chờ duyệt</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mj-actions" style="margin-top: 16px; display: flex; align-items: center; justify-content: flex-start; gap: 6px; padding-top: 14px; border-top: 1px solid #f1f5f9;">
+                <a href="{% url 'applicant_list' job.id %}" class="btn" title="Quản lý CV" style="padding: 6px 10px; border: 1px solid #e2e8f0; color: #475569; background: #f8fafc; border-radius: 6px; transition: all 0.2s;">
+                    <i class="fas fa-users" style="font-size: 12px;"></i>
+                </a>
+
+                {% if job.is_approved %}
+                    <a href="{% url 'toggle_job_status' job.id %}" class="btn" title="Hủy duyệt" style="flex: 1; padding: 6px 12px; border: 1px solid #e2e8f0; color: #64748b; background: #ffffff; border-radius: 6px; font-size: 12px; font-weight: 600; text-align: center;">
+                        <i class="fas fa-eye-slash me-1"></i> Gỡ tin
+                    </a>
+                {% else %}
+                    <a href="{% url 'toggle_job_status' job.id %}" class="btn" title="Duyệt bài" style="flex: 1; padding: 6px 12px; border: 1px solid #a7f3d0; color: white; background: #059669; border-radius: 6px; font-size: 12px; font-weight: 600; text-align: center;">
+                        <i class="fas fa-check-double me-1"></i> Duyệt tin
+                    </a>
+                {% endif %}
+
+                <a href="{% url 'edit_job' job.id %}" class="btn" title="Chỉnh sửa" style="padding: 6px 10px; border: 1px solid #e2e8f0; color: #475569; background: transparent; border-radius: 6px;">
+                    <i class="fas fa-pen" style="font-size: 12px;"></i>
+                </a>
+                <a href="{% url 'delete_job' job.id %}" class="btn" title="Xóa" style="padding: 6px 10px; border: 1px solid #fee2e2; color: #ef4444; background: transparent; border-radius: 6px;">
+                    <i class="fas fa-trash" style="font-size: 12px;"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5 border rounded-4 bg-white shadow-sm mt-3">
+        <i class="fas fa-inbox mb-3" style="font-size: 3rem; color: #e2e8f0;"></i>
+        <h5 style="color: #0f172a; font-weight: 700;">Hệ thống chưa có tin nào</h5>
+    </div>
+    {% endfor %}
+</div>
+
+</div>
+{% endblock %}

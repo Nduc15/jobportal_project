@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-from django.core.validators import FileExtensionValidator
+from django.core.validators import FileExtensionValidator, MinValueValidator
 
 def validate_file_size(value):
     filesize = value.size
@@ -30,16 +30,18 @@ class User(AbstractUser):
 
 class Job(models.Model):
     EXPERIENCE_CHOICES = [
-        ('Không yêu cầu', 'Không yêu cầu'),
-        ('Thực tập / Fresher', 'Thực tập / Fresher'),
-        ('1 - 3 năm', '1 - 3 năm'),
-        ('Trên 3 năm', 'Trên 3 năm'),
+        ('none', 'Không yêu cầu'),
+        ('0_1', 'Dưới 1 năm'),
+        ('1_3', '1 - 3 năm'),
+        ('3_5', '3 - 5 năm'),
+        ('over_5', 'Trên 5 năm'),
     ]
     
     JOB_TYPE_CHOICES = [
-        ('Toàn thời gian', 'Toàn thời gian'),
-        ('Bán thời gian', 'Bán thời gian'),
-        ('Làm từ xa', 'Làm từ xa'),
+        ('full_time', 'Toàn thời gian'),
+        ('part_time', 'Bán thời gian'),
+        ('remote', 'Làm từ xa'),
+        ('hybrid', 'Hybrid (Kết hợp)'),
     ]
 
     title = models.CharField(max_length=200)
@@ -53,9 +55,9 @@ class Job(models.Model):
     requirements = models.CharField(max_length=500, blank=True, null=True, verbose_name="Yêu cầu kỹ năng")
     
     # Các trường đã được chuẩn hóa
-    experience = models.CharField(max_length=100, choices=EXPERIENCE_CHOICES, default='Không yêu cầu', verbose_name="Kinh nghiệm")
-    job_type = models.CharField(max_length=100, choices=JOB_TYPE_CHOICES, default='Toàn thời gian', verbose_name="Hình thức làm việc")
-    quantity = models.PositiveIntegerField(default=1, verbose_name="Số lượng tuyển")
+    experience = models.CharField(max_length=50, choices=EXPERIENCE_CHOICES, default='none', verbose_name="Kinh nghiệm")
+    job_type = models.CharField(max_length=50, choices=JOB_TYPE_CHOICES, default='full_time', verbose_name="Hình thức làm việc")
+    quantity = models.IntegerField(default=1, validators=[MinValueValidator(1)], verbose_name="Số lượng tuyển")
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

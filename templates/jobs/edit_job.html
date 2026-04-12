@@ -46,6 +46,28 @@
                     {{ form.title }}
                 </div>
 
+                <!-- Kinh nghiệm, Hình thức và Số lượng (3 cột) -->
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label for="{{ form.experience.id_for_label }}" class="form-label fw-semibold text-truncate d-block" style="color: #334155;" title="{{ form.experience.label }}">
+                            <i class="fas fa-briefcase me-1 text-muted"></i> {{ form.experience.label }}
+                        </label>
+                        {{ form.experience }}
+                    </div>
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label for="{{ form.job_type.id_for_label }}" class="form-label fw-semibold text-truncate d-block" style="color: #334155;" title="{{ form.job_type.label }}">
+                            <i class="fas fa-clock me-1 text-muted"></i> {{ form.job_type.label }}
+                        </label>
+                        {{ form.job_type }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ form.quantity.id_for_label }}" class="form-label fw-semibold text-truncate d-block" style="color: #334155;" title="{{ form.quantity.label }}">
+                            <i class="fas fa-users me-1 text-muted"></i> {{ form.quantity.label }}
+                        </label>
+                        {{ form.quantity }}
+                    </div>
+                </div>
+
                 <!-- Mô tả -->
                 <div class="mb-4">
                     <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold" style="color: #334155;">

@@ -129,13 +129,7 @@
                                 </div>
                                 <div>
                                     <small class="text-muted d-block mb-0" style="font-size: 0.75rem; font-weight: 500;">Kinh nghiệm</small>
-                                    <span class="fw-bold" style="font-size: 0.95rem; color: #1e293b;">
-                                        {% if job.experience == "Không y/c" or not job.experience %}
-                                            Không yêu cầu
-                                        {% else %}
-                                            {{ job.experience }}
-                                        {% endif %}
-                                    </span>
+                                    <span class="fw-bold" style="font-size: 0.95rem; color: #1e293b;">{{ job.get_experience_display }}</span>
                                 </div>
                             </div>
 
@@ -146,7 +140,18 @@
                                 </div>
                                 <div>
                                     <small class="text-muted d-block mb-0" style="font-size: 0.75rem; font-weight: 500;">Hình thức làm việc</small>
-                                    <span class="fw-bold" style="font-size: 0.95rem; color: #1e293b;">{{ job.job_type|default:"Toàn thời gian" }}</span>
+                                    <span class="fw-bold" style="font-size: 0.95rem; color: #1e293b;">{{ job.get_job_type_display }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Số lượng tuyển -->
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #f1f5f9; border-radius: 10px; flex-shrink: 0;">
+                                    <i class="fas fa-user-plus" style="color: #64748b; font-size: 1rem;"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block mb-0" style="font-size: 0.75rem; font-weight: 500;">Số lượng tuyển</small>
+                                    <span class="fw-bold" style="font-size: 0.95rem; color: #1e293b;">{{ job.quantity }} Người</span>
                                 </div>
                             </div>
 

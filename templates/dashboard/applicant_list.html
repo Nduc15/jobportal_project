@@ -4,95 +4,103 @@
 {% block title %}Danh sách ứng viên – {{ job.title }} - JobPortal PTIT{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v={% now 'U' %}">
 {% endblock %}
 
 {% block content %}
-
-<!-- Breadcrumb -->
-<nav class="dashboard-breadcrumb" aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'employer_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Danh sách ứng viên</li>
-    </ol>
-</nav>
-
-<!-- Job Info Header -->
-<div class="dashboard-hero applicant-hero">
-    <div class="dashboard-hero-content">
-        <div class="dashboard-avatar employer-avatar">
-            <i class="fas fa-users"></i>
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav class="dashboard-breadcrumb mb-4" aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'employer_dashboard' %}" style="color: #2563eb; text-decoration: none;"><i class="fas fa-tachometer-alt me-1"></i> Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Danh sách ứng viên</li>
+        </ol>
+    </nav>
+    
+    <!-- Job Info Header -->
+    <div class="dashboard-hero applicant-hero">
+        <div class="dashboard-hero-content">
+            <div class="dashboard-avatar employer-avatar" style="background: #eff6ff; color: #2563eb;">
+                <i class="fas fa-users"></i>
+            </div>
+            <div>
+                <h2 class="dashboard-title">{{ job.title }}</h2>
+                <p class="dashboard-subtitle">
+                    Có <strong>{{ applications|length }}</strong> ứng viên đã nộp CV cho vị trí này.
+                </p>
+            </div>
         </div>
-        <div>
-            <h2 class="dashboard-title">{{ job.title }}</h2>
-            <p class="dashboard-subtitle">
-                Có <strong>{{ applications|length }}</strong> ứng viên đã nộp CV cho vị trí này.
-            </p>
+        <a href="{% url 'employer_dashboard' %}" class="btn px-4 py-2" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; border-radius: 8px; font-weight: 500; font-size: 0.9rem;">
+            <i class="fas fa-arrow-left me-2"></i> Quay lại Dashboard
+        </a>
+    </div>
+    
+    <!-- Applicants Table Section -->
+    <div class="row mb-4 mt-5">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 style="font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 600; color: #0f172a; margin: 0;">
+                    <i class="fas fa-user-friends me-2" style="color: #2563eb;"></i> Danh sách ứng viên đã nộp CV
+                </h4>
+            </div>
         </div>
     </div>
-    <a href="{% url 'employer_dashboard' %}" class="btn btn-back-home">
-        <i class="fas fa-arrow-left"></i> Quay lại Dashboard
-    </a>
-</div>
-
-<!-- Applicants Table -->
-<div class="dash-card">
-    <div class="dash-card-header">
-        <h4><i class="fas fa-user-friends"></i> Danh sách ứng viên đã nộp CV</h4>
-    </div>
-    <div class="table-responsive">
-        <table class="table table-hover dash-table" id="applicant-list-table">
-            <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col"><i class="fas fa-user"></i> Tên ứng viên</th>
-                    <th scope="col"><i class="fas fa-envelope"></i> Email</th>
-                    <th scope="col"><i class="fas fa-calendar"></i> Ngày nộp</th>
-                    <th scope="col"><i class="fas fa-info-circle"></i> Trạng thái</th>
-                    <th scope="col"><i class="fas fa-download"></i> File CV</th>
-                    <th scope="col"><i class="fas fa-cogs"></i> Thao tác</th>
+    
+    <div class="table-responsive bg-white rounded-4 shadow-sm border p-2" style="overflow-x: auto; margin-top: 10px;">
+        <table class="table table-hover border-0 mb-0" id="applicant-list-table">
+            <thead class="bg-light border-0">
+                <tr style="border: none;">
+                    <th scope="col" style="padding: 16px; font-weight: 600; color: #64748b; font-size: 13px; text-transform: uppercase;">#</th>
+                    <th scope="col" style="padding: 16px; font-weight: 600; color: #64748b; font-size: 13px; text-transform: uppercase;">Tên ứng viên</th>
+                    <th scope="col" style="padding: 16px; font-weight: 600; color: #64748b; font-size: 13px; text-transform: uppercase;">Email</th>
+                    <th scope="col" style="padding: 16px; font-weight: 600; color: #64748b; font-size: 13px; text-transform: uppercase;">Ngày nộp</th>
+                    <th scope="col" style="padding: 16px; font-weight: 600; color: #64748b; font-size: 13px; text-transform: uppercase;">Trạng thái</th>
+                    <th scope="col" style="padding: 16px; font-weight: 600; color: #64748b; font-size: 13px; text-transform: uppercase;">File CV</th>
+                    <th scope="col" style="padding: 16px; font-weight: 600; color: #64748b; font-size: 13px; text-transform: uppercase; text-align: right;">Thao tác</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="border-0">
                 {% for app in applications %}
-                <tr class="applicant-row" id="applicant-row-{{ app.id }}">
-                    <td>{{ forloop.counter }}</td>
-                    <td class="fw-semibold">
-                        <div class="applicant-name">
-                            <div class="applicant-avatar-sm">{{ app.candidate.username|first }}</div>
-                            {{ app.candidate.username }}
+                <tr class="applicant-row align-middle" id="applicant-row-{{ app.id }}" style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 16px; color: #94a3b8;">{{ forloop.counter }}</td>
+                    <td style="padding: 16px;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div style="width: 36px; height: 36px; background: #f1f5f9; color: #4338ca; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">
+                                {{ app.candidate.username|first|upper }}
+                            </div>
+                            <span class="fw-semibold" style="color: #0f172a;">{{ app.candidate.username }}</span>
                         </div>
                     </td>
-                    <td>{{ app.candidate.email }}</td>
-                    <td>{{ app.applied_at|date:"d/m/Y H:i" }}</td>
-                    <td>
+                    <td style="padding: 16px; color: #64748b;">{{ app.candidate.email }}</td>
+                    <td style="padding: 16px; color: #64748b;">{{ app.applied_at|date:"d/m/Y H:i" }}</td>
+                    <td style="padding: 16px;">
                         {% if app.status == 'Pending' %}
-                            <span class="badge badge-pending"><i class="fas fa-hourglass-half"></i> Chờ duyệt</span>
+                            <span class="badge-status badge-pending"><i class="fas fa-hourglass-half me-1"></i> Chờ duyệt</span>
                         {% elif app.status == 'Accepted' %}
-                            <span class="badge badge-accepted"><i class="fas fa-check"></i> Chấp nhận</span>
+                            <span class="badge-status badge-accepted"><i class="fas fa-check me-1"></i> Chấp nhận</span>
                         {% elif app.status == 'Rejected' %}
-                            <span class="badge badge-rejected"><i class="fas fa-times"></i> Từ chối</span>
+                            <span class="badge-status badge-rejected"><i class="fas fa-times me-1"></i> Từ chối</span>
                         {% elif app.status == 'Viewed' %}
-                            <span class="badge badge-viewed"><i class="fas fa-eye"></i> Đã xem</span>
+                            <span class="badge-status" style="background: #f8fafc; color: #475569; border: 1px solid #e2e8f0;"><i class="fas fa-eye me-1"></i> Đã xem</span>
                         {% endif %}
                     </td>
-                    <td>
+                    <td style="padding: 16px;">
                         {% if app.cv_file %}
-                            <a href="{{ app.cv_file.url }}" class="btn btn-download-cv" target="_blank" id="download-cv-{{ app.id }}">
-                                <i class="fas fa-file-download"></i> Tải CV
+                            <a href="{{ app.cv_file.url }}" class="btn d-inline-flex align-items-center gap-2" target="_blank" style="padding: 6px 14px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 8px; font-weight: 600; font-size: 13px; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
+                                <i class="fas fa-file-pdf" style="font-size: 15px;"></i> Tải CV
                             </a>
                         {% else %}
-                            <span class="text-muted">Không có file</span>
+                            <span class="text-muted">N/A</span>
                         {% endif %}
                     </td>
-                    <td>
-                        <div class="action-buttons">
+                    <td style="padding: 16px; text-align: right;">
+                        <div class="d-flex align-items-center justify-content-end gap-2">
                             {% if app.status != 'Accepted' %}
                                 <form method="POST" action="{% url 'update_application_status' app.id %}" style="display:inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="status" value="Accepted">
-                                    <button type="submit" class="btn btn-accept" id="accept-btn-{{ app.id }}" title="Chấp nhận ứng viên">
-                                        <i class="fas fa-check-circle"></i> Chấp nhận
+                                    <button type="submit" class="btn" style="padding: 6px 12px; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; border-radius: 6px; font-weight: 600; font-size: 13px;">
+                                        Chấp nhận
                                     </button>
                                 </form>
                             {% endif %}
@@ -100,8 +108,8 @@
                                 <form method="POST" action="{% url 'update_application_status' app.id %}" style="display:inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="status" value="Rejected">
-                                    <button type="submit" class="btn btn-reject" id="reject-btn-{{ app.id }}" title="Từ chối ứng viên">
-                                        <i class="fas fa-times-circle"></i> Từ chối
+                                    <button type="submit" class="btn" style="padding: 6px 12px; background: #fff1f2; color: #991b1b; border: 1px solid #fecdd3; border-radius: 6px; font-weight: 600; font-size: 13px;">
+                                        Từ chối
                                     </button>
                                 </form>
                             {% endif %}
@@ -110,11 +118,11 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7" class="text-center">
-                        <div class="empty-state-modern py-5">
-                            <img src="{% static 'images/empty-state.png' %}" alt="No Data" class="img-fluid mb-4" style="max-width: 220px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.05));">
-                            <h5 style="color: #0f2b3d; font-weight: 700;">Chưa có ứng viên</h5>
-                            <p class="text-muted mb-4" style="font-size: 0.95rem; max-width: 400px; margin: 0 auto;">Hiện tại chưa có ứng viên nào nộp CV cho vị trí này. Hãy kiên nhẫn đợi thêm một chút nhé!</p>
+                    <td colspan="7" class="text-center py-5">
+                        <div class="py-5">
+                            <i class="fas fa-inbox mb-3" style="font-size: 3rem; color: #f1f5f9;"></i>
+                            <h5 style="color: #0f172a; font-weight: 700;">Chưa có ứng viên</h5>
+                            <p class="text-muted">Vị trí này hiện chưa nhận được CV nào.</p>
                         </div>
                     </td>
                 </tr>
@@ -123,5 +131,4 @@
         </table>
     </div>
 </div>
-
 {% endblock %}

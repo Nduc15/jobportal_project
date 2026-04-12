@@ -59,10 +59,50 @@ else:
 
 # === Tạo Tin tuyển dụng ===
 jobs_data = [
-    {'title': 'Lập trình viên Python (Django)', 'description': 'Phát triển backend bằng Django', 'location': 'Hà Nội', 'salary_min': 15, 'salary_max': 25, 'is_approved': True},
-    {'title': 'Lập trình viên Java Spring Boot', 'description': 'Xây dựng hệ thống microservices', 'location': 'TP.HCM', 'salary_min': 18, 'salary_max': 30, 'is_approved': True},
-    {'title': 'Frontend Developer (React)', 'description': 'Phát triển giao diện người dùng', 'location': 'Đà Nẵng', 'salary_min': 12, 'salary_max': 22, 'is_approved': False},
-    {'title': 'DevOps Engineer', 'description': 'Quản lý CI/CD và hạ tầng cloud', 'location': 'Hà Nội', 'salary_min': 20, 'salary_max': 35, 'is_approved': True},
+    {
+        'title': 'Lập trình viên Python (Django)', 
+        'description': 'Phát triển backend bằng Django', 
+        'location': 'Hà Nội', 
+        'salary_min': 15, 
+        'salary_max': 25, 
+        'is_approved': True,
+        'experience': '1_3',
+        'job_type': 'full_time',
+        'quantity': 3
+    },
+    {
+        'title': 'Lập trình viên Java Spring Boot', 
+        'description': 'Xây dựng hệ thống microservices', 
+        'location': 'TP.HCM', 
+        'salary_min': 18, 
+        'salary_max': 30, 
+        'is_approved': True,
+        'experience': '3_5',
+        'job_type': 'full_time',
+        'quantity': 5
+    },
+    {
+        'title': 'Frontend Developer (React)', 
+        'description': 'Phát triển giao diện người dùng', 
+        'location': 'Đà Nẵng', 
+        'salary_min': 12, 
+        'salary_max': 22, 
+        'is_approved': False,
+        'experience': 'none',
+        'job_type': 'remote',
+        'quantity': 2
+    },
+    {
+        'title': 'DevOps Engineer', 
+        'description': 'Quản lý CI/CD và hạ tầng cloud', 
+        'location': 'Hà Nội', 
+        'salary_min': 20, 
+        'salary_max': 35, 
+        'is_approved': True,
+        'experience': 'over_5',
+        'job_type': 'full_time',
+        'quantity': 1
+    },
 ]
 
 created_jobs = []

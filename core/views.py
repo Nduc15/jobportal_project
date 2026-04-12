@@ -38,20 +38,24 @@ def index(request):
     salary = request.GET.get('salary', '').strip()
     
     # 2. Chuẩn hóa dữ liệu (Normalization) & Áp dụng bộ lọc
-    # Mapping các từ khóa phổ thông sang giá trị chuẩn trong DB
+    # Mapping các từ khóa phổ thông sang giá trị chuẩn trong DB (Keys)
     mapping = {
-        'junior': '1 - 3 năm',
-        'senior': 'Trên 3 năm',
-        'fresher': 'Thực tập / Fresher',
-        'không yêu cầu kn': 'Không yêu cầu',
-        'không yêu cầu kinh nghiệm': 'Không yêu cầu',
-        'không kinh nghiệm': 'Không yêu cầu',
-        '0 năm': 'Không yêu cầu',
-        '1 năm': '1 - 3 năm',
-        '2 năm': '1 - 3 năm',
-        '3 năm': '1 - 3 năm',
-        '4 năm': 'Trên 3 năm',
-        '5 năm': 'Trên 3 năm',
+        'junior': '1_3',
+        'senior': 'over_5',
+        'fresher': '0_1',
+        'không yêu cầu': 'none',
+        'không yêu cầu kn': 'none',
+        'không yêu cầu kinh nghiệm': 'none',
+        'không kinh nghiệm': 'none',
+        'ko yêu cầu': 'none',
+        'ko kn': 'none',
+        '0 năm': 'none',
+        '1 năm': '1_3',
+        '2 năm': '1_3',
+        '3 năm': '1_3',
+        '4 năm': '3_5',
+        '5 năm': '3_5',
+        '6 năm': 'over_5',
     }
 
     if q:
@@ -147,6 +151,8 @@ def register(request):
         auth_login(request, user)
         if user.is_candidate:
             return redirect('candidate_dashboard')
+        elif user.is_superuser:
+            return redirect('admin_dashboard')
         else:
             return redirect('employer_dashboard')
 
@@ -161,7 +167,9 @@ def login(request):
             auth_login(request, user)
             if user.is_candidate:
                 return redirect('candidate_dashboard')
-            elif user.is_employer or user.is_superuser:
+            elif user.is_superuser:
+                return redirect('admin_dashboard')
+            elif user.is_employer:
                 return redirect('employer_dashboard')
             else:
                 return redirect('home')
@@ -179,6 +187,9 @@ def logout_view(request):
 @login_required
 def candidate_dashboard(request):
     """Dashboard cho ứng viên: hiển thị danh sách đơn ứng tuyển và trạng thái."""
+    if request.user.is_superuser:
+        return redirect('admin_dashboard')
+    
     applications = Application.objects.filter(
         candidate=request.user
     ).select_related('job', 'job__employer').order_by('-applied_at')
@@ -204,17 +215,14 @@ def candidate_dashboard(request):
 def employer_dashboard(request):
     """Dashboard cho NTD: hiển thị danh sách tin tuyển dụng và số CV nhận được."""
     if request.user.is_superuser:
-        # Admin thấy toàn bộ tin để quản lý
-        jobs = Job.objects.all().annotate(
-            app_count=Count('apps')
-        ).order_by('-created_at')
-    else:
-        # NTD chỉ thấy bài của mình
-        jobs = Job.objects.filter(
-            employer=request.user
-        ).annotate(
-            app_count=Count('apps')
-        ).order_by('-created_at')
+        return redirect('admin_dashboard')
+    
+    # NTD chỉ thấy bài của mình
+    jobs = Job.objects.filter(
+        employer=request.user
+    ).annotate(
+        app_count=Count('apps')
+    ).order_by('-created_at')
 
     total_jobs = jobs.count()
     approved_jobs = jobs.filter(is_approved=True).count()
@@ -230,13 +238,44 @@ def employer_dashboard(request):
     }
     return render(request, 'dashboard/employer_dashboard.html', context)
 
+# ========== DASHBOARD ADMIN (Chỉ Superuser) ==========
+@login_required
+def admin_dashboard(request):
+    """Dashboard cho Admin: quản lý toàn bộ hệ thống."""
+    if not request.user.is_superuser:
+        return redirect('home')
+
+    # Thống kê toàn cục
+    jobs = Job.objects.all().annotate(app_count=Count('apps')).order_by('-created_at')
+    total_jobs = jobs.count()
+    approved_jobs = jobs.filter(is_approved=True).count()
+    pending_jobs = jobs.filter(is_approved=False).count()
+    
+    from core.models import User
+    total_companies = User.objects.filter(is_employer=True).count()
+    total_candidates = User.objects.filter(is_candidate=True).count()
+    total_cvs = Application.objects.count()
+
+    context = {
+        'jobs': jobs,
+        'total_jobs': total_jobs,
+        'approved_jobs': approved_jobs,
+        'pending_jobs': pending_jobs,
+        'total_companies': total_companies,
+        'total_candidates': total_candidates,
+        'total_cvs': total_cvs,
+    }
+    return render(request, 'dashboard/admin_dashboard.html', context)
+
 # ========== ROUTER DASHBOARD ==========
 @login_required
 def dashboard_router(request):
     """Router trung tâm: tự động kiểm tra role và điều hướng đến Dashboard tương ứng."""
     if request.user.is_candidate:
         return redirect('candidate_dashboard')
-    elif request.user.is_employer or request.user.is_superuser:
+    elif request.user.is_superuser:
+        return redirect('admin_dashboard')
+    elif request.user.is_employer:
         return redirect('employer_dashboard')
     return redirect('home')
 

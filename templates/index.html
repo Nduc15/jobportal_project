@@ -4,6 +4,108 @@
 
 {% block title %}Trang chủ - Tìm việc làm{% endblock %}
 
+{% block extra_css %}
+<style>
+body {
+    background-color: #f8fafc !important;
+    font-family: 'Inter', sans-serif !important;
+}
+.site-header {
+    background: #ffffff !important;
+    border-bottom: 1px solid #eef2f8 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02) !important;
+}
+.filter-chip-btn {
+    border-radius: 20px;
+    font-size: 14px;
+    padding: 6px 14px;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    background: #f8fafc;
+    transition: all 0.2s;
+    cursor: pointer;
+    display: inline-block;
+    margin-bottom: 4px;
+}
+.filter-radio {
+    display: none !important;
+}
+.filter-chip-btn:hover {
+    background: #e2e8f0;
+}
+.btn-check.filter-radio:checked + .filter-chip-btn {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #3b82f6;
+    font-weight: 600;
+}
+.job-card {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03), 0 1px 1px rgba(0,0,0,0.02);
+    border: 1px solid #eef2f8;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    overflow: hidden;
+    height: 100%;
+}
+.job-card:hover {
+    transform: none !important;
+    box-shadow: 0 8px 20px -6px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.02) !important;
+    border-color: #e2e8f0;
+}
+.btn-apply-outline {
+    background: transparent;
+    border: 1px solid #cbd5e1;
+    color: #2563eb;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 6px 16px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+.btn-apply-outline:hover, .btn-apply-outline:focus {
+    background: #eff6ff;
+    border-color: #2563eb;
+    color: #1d4ed8;
+    outline: none;
+}
+.btn-apply-outline:focus-visible {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #2563eb;
+}
+.sidebar-filter-wrapper {
+    background: #ffffff;
+    border: 1px solid #eef2f8;
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    position: sticky;
+    top: 90px;
+}
+.suggestion-pill {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 13px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.suggestion-pill:hover {
+    background: #f1f5f9;
+}
+.search-header-card {
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #eef2f8;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+</style>
+{% endblock %}
+
+
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -84,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </select>
             </div>
             <button class="btn text-white h-100 px-4 flex-shrink-0"
-                    style="background: #00b14f; font-weight: 600; border-radius: 0 6px 6px 0; font-size: 0.9rem; white-space: nowrap;"
+                    style="background: #2563eb; font-weight: 600; border-radius: 0 6px 6px 0; font-size: 0.9rem; white-space: nowrap;"
                     type="submit">
                 Tìm kiếm
             </button>
@@ -93,11 +195,11 @@ document.addEventListener('DOMContentLoaded', function() {
         <!-- Suggestion Tags -->
         <div class="mt-3 d-flex flex-wrap align-items-center gap-2" style="font-size: 0.85rem;">
             <span class="text-white-50">Gợi ý:</span>
-            <button type="button" onclick="quickSearch('Thực tập / Fresher', 'experience')" class="text-white border px-3 py-1 rounded-pill suggestion-tag">Thực tập / Fresher</button>
+            <button type="button" onclick="quickSearch('0_1', 'experience')" class="text-white border px-3 py-1 rounded-pill suggestion-tag">Dưới 1 năm KN</button>
             <button type="button" onclick="quickSearch('Lập trình Web')"             class="text-white border px-3 py-1 rounded-pill suggestion-tag">Lập trình Web</button>
             <button type="button" onclick="quickSearch('Marketing')"                  class="text-white border px-3 py-1 rounded-pill suggestion-tag">Marketing</button>
             <button type="button" onclick="quickSearch('Kế toán')"                   class="text-white border px-3 py-1 rounded-pill suggestion-tag">Kế toán</button>
-            <button type="button" onclick="quickSearch('Không yêu cầu', 'experience')"   class="text-white border px-3 py-1 rounded-pill suggestion-tag">Không yêu cầu KN</button>
+            <button type="button" onclick="quickSearch('none', 'experience')"   class="text-white border px-3 py-1 rounded-pill suggestion-tag">Không yêu cầu KN</button>
         </div>
     </div>
 </div>
@@ -109,190 +211,152 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="row gx-4 gx-lg-5">
 
     <!-- Sidebar Bộ Lọc (Sticky Filter) -->
-    <div class="col-lg-2 col-md-3 sticky-sidebar">
-        <div class="filter-sidebar card border-0 shadow-sm p-4" style="border-radius: 16px;">
+    <div class="col-lg-2 col-md-3 sticky-sidebar mb-3 mb-md-0">
+        <!-- Nút bật tắt Lọc trên Mobile -->
+        <button class="btn btn-outline-primary d-md-none w-100 fw-bold mb-2 shadow-sm rounded-3 py-2" type="button" data-bs-toggle="collapse" data-bs-target="#mobileFilterCollapse" aria-expanded="false" aria-controls="mobileFilterCollapse" style="color: #2563eb; border-color: #2563eb;">
+            <i class="fas fa-filter me-2"></i> Lọc việc làm
+        </button>
+
+        <div class="filter-sidebar card border-0 shadow-sm p-4 collapse d-md-block" id="mobileFilterCollapse" style="border-radius: 16px;">
             <h6 class="text-uppercase fw-bold mb-4" style="color: #475569; font-size: 0.8rem; letter-spacing: 1px;">Bộ lọc tìm kiếm</h6>
 
             <!-- Hình thức làm việc -->
             <div class="mb-4">
-                <p class="fw-bold mb-3 text-dark" style="font-size: 0.9rem;">Hình thức làm việc</p>
-                <div class="d-flex align-items-center mb-2">
-                    <input class="mt-0 sidebar-filter" type="radio" name="job_type" id="jt_all" value="" form="masterSearchForm"
-                           {% if not selected_job_type %}checked{% endif %}>
-                    <label class="ms-2 text-secondary mb-0" for="jt_all" style="font-size: 0.85rem;">Tất cả</label>
-                </div>
-                <div class="d-flex align-items-center mb-2">
-                    <input class="mt-0 sidebar-filter" type="radio" name="job_type" id="jt_fulltime" value="Toàn thời gian" form="masterSearchForm"
-                           {% if selected_job_type == 'Toàn thời gian' %}checked{% endif %}>
-                    <label class="ms-2 text-secondary mb-0" for="jt_fulltime" style="font-size: 0.85rem;">Toàn thời gian</label>
-                </div>
-                <div class="d-flex align-items-center mb-2">
-                    <input class="mt-0 sidebar-filter" type="radio" name="job_type" id="jt_parttime" value="Bán thời gian" form="masterSearchForm"
-                           {% if selected_job_type == 'Bán thời gian' %}checked{% endif %}>
-                    <label class="ms-2 text-secondary mb-0" for="jt_parttime" style="font-size: 0.85rem;">Bán thời gian</label>
-                </div>
-                <div class="d-flex align-items-center mb-2">
-                    <input class="mt-0 sidebar-filter" type="radio" name="job_type" id="jt_remote" value="Làm từ xa" form="masterSearchForm"
-                           {% if selected_job_type == 'Làm từ xa' %}checked{% endif %}>
-                    <label class="ms-2 text-secondary mb-0" for="jt_remote" style="font-size: 0.85rem;">Làm từ xa</label>
+                <p class="fw-bold mb-3" style="font-size: 14px; color: #0f172a;">Hình thức làm việc</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <input class="btn-check sidebar-filter filter-radio" type="radio" name="job_type" id="jt_all" value="" form="masterSearchForm" {% if not selected_job_type %}checked{% endif %}>
+                    <label class="filter-chip-btn" for="jt_all">Tất cả</label>
+                    
+                    <input class="btn-check sidebar-filter filter-radio" type="radio" name="job_type" id="jt_fulltime" value="full_time" form="masterSearchForm" {% if selected_job_type == 'full_time' %}checked{% endif %}>
+                    <label class="filter-chip-btn" for="jt_fulltime">Toàn thời gian</label>
+                    
+                    <input class="btn-check sidebar-filter filter-radio" type="radio" name="job_type" id="jt_parttime" value="part_time" form="masterSearchForm" {% if selected_job_type == 'part_time' %}checked{% endif %}>
+                    <label class="filter-chip-btn" for="jt_parttime">Bán thời gian</label>
+                    
+                    <input class="btn-check sidebar-filter filter-radio" type="radio" name="job_type" id="jt_remote" value="remote" form="masterSearchForm" {% if selected_job_type == 'remote' %}checked{% endif %}>
+                    <label class="filter-chip-btn" for="jt_remote">Từ xa</label>
                 </div>
             </div>
-
-            <hr style="border-top: 1px solid #e2e8f0;">
 
             <!-- Kinh nghiệm -->
             <div class="mb-4">
-                <p class="fw-bold mb-3 text-dark" style="font-size: 0.9rem;">Kinh nghiệm</p>
-                <div class="d-flex align-items-center mb-2">
-                    <input class="mt-0 sidebar-filter" type="radio" name="experience" id="exp_all" value="" form="masterSearchForm"
-                           {% if not selected_experience %}checked{% endif %}>
-                    <label class="ms-2 text-secondary mb-0" for="exp_all" style="font-size: 0.85rem;">Tất cả</label>
-                </div>
-                <div class="d-flex align-items-center mb-2">
-                    <input class="mt-0 sidebar-filter" type="radio" name="experience" id="exp_fresher" value="Thực tập / Fresher" form="masterSearchForm"
-                           {% if selected_experience == 'Thực tập / Fresher' %}checked{% endif %}>
-                    <label class="ms-2 text-secondary mb-0" for="exp_fresher" style="font-size: 0.85rem;">Thực tập / Fresher</label>
-                </div>
-                <div class="d-flex align-items-center mb-2">
-                    <input class="mt-0 sidebar-filter" type="radio" name="experience" id="exp_junior" value="1 - 3 năm" form="masterSearchForm"
-                           {% if selected_experience == '1 - 3 năm' %}checked{% endif %}>
-                    <label class="ms-2 text-secondary mb-0" for="exp_junior" style="font-size: 0.85rem;">1 - 3 năm (Junior)</label>
-                </div>
-                <div class="d-flex align-items-center mb-2">
-                    <input class="mt-0 sidebar-filter" type="radio" name="experience" id="exp_senior" value="Trên 3 năm" form="masterSearchForm"
-                           {% if selected_experience == 'Trên 3 năm' %}checked{% endif %}>
-                    <label class="ms-2 text-secondary mb-0" for="exp_senior" style="font-size: 0.85rem;">Trên 3 năm (Senior)</label>
-                </div>
-                <div class="d-flex align-items-center mb-2">
-                    <input class="mt-0 sidebar-filter" type="radio" name="experience" id="exp_none" value="Không yêu cầu" form="masterSearchForm"
-                           {% if selected_experience == 'Không yêu cầu' %}checked{% endif %}>
-                    <label class="ms-2 text-secondary mb-0" for="exp_none" style="font-size: 0.85rem;">Không yêu cầu</label>
+                <p class="fw-bold mb-3" style="font-size: 14px; color: #0f172a;">Kinh nghiệm</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <input class="btn-check sidebar-filter filter-radio" type="radio" name="experience" id="exp_all" value="" form="masterSearchForm" {% if not selected_experience %}checked{% endif %}>
+                    <label class="filter-chip-btn" for="exp_all">Tất cả</label>
+                    
+                    <input class="btn-check sidebar-filter filter-radio" type="radio" name="experience" id="exp_none" value="none" form="masterSearchForm" {% if selected_experience == 'none' %}checked{% endif %}>
+                    <label class="filter-chip-btn" for="exp_none">Không yêu cầu</label>
+                    
+                    <input class="btn-check sidebar-filter filter-radio" type="radio" name="experience" id="exp_fresher" value="0_1" form="masterSearchForm" {% if selected_experience == '0_1' %}checked{% endif %}>
+                    <label class="filter-chip-btn" for="exp_fresher">&lt; 1 năm</label>
+                    
+                    <input class="btn-check sidebar-filter filter-radio" type="radio" name="experience" id="exp_junior" value="1_3" form="masterSearchForm" {% if selected_experience == '1_3' %}checked{% endif %}>
+                    <label class="filter-chip-btn" for="exp_junior">1-3 năm</label>
+                    
+                    <input class="btn-check sidebar-filter filter-radio" type="radio" name="experience" id="exp_senior" value="over_5" form="masterSearchForm" {% if selected_experience == 'over_5' %}checked{% endif %}>
+                    <label class="filter-chip-btn" for="exp_senior">Hơn 5 năm</label>
                 </div>
             </div>
-
-            <hr style="border-top: 1px solid #e2e8f0;">
 
             <!-- Mức lương -->
             <div class="mb-4">
-                <p class="fw-bold mb-3 text-dark" style="font-size: 0.9rem;">Mức lương</p>
-                <div class="d-flex align-items-center mb-2">
-                    <input class="mt-0 sidebar-filter" type="radio" name="salary" id="sal_all" value="" form="masterSearchForm"
-                           {% if not selected_salary %}checked{% endif %}>
-                    <label class="ms-2 text-secondary mb-0" for="sal_all" style="font-size: 0.85rem;">Tất cả</label>
-                </div>
-                <div class="d-flex align-items-center mb-2">
-                    <input class="mt-0 sidebar-filter" type="radio" name="salary" id="sal_0_10" value="0_10" form="masterSearchForm"
-                           {% if selected_salary == '0_10' %}checked{% endif %}>
-                    <label class="ms-2 text-secondary mb-0" for="sal_0_10" style="font-size: 0.85rem;">Dưới 10 triệu</label>
-                </div>
-                <div class="d-flex align-items-center mb-2">
-                    <input class="mt-0 sidebar-filter" type="radio" name="salary" id="sal_10_20" value="10_20" form="masterSearchForm"
-                           {% if selected_salary == '10_20' %}checked{% endif %}>
-                    <label class="ms-2 text-secondary mb-0" for="sal_10_20" style="font-size: 0.85rem;">10 - 20 triệu</label>
-                </div>
-                <div class="d-flex align-items-center mb-2">
-                    <input class="mt-0 sidebar-filter" type="radio" name="salary" id="sal_20_50" value="20_50" form="masterSearchForm"
-                           {% if selected_salary == '20_50' %}checked{% endif %}>
-                    <label class="ms-2 text-secondary mb-0" for="sal_20_50" style="font-size: 0.85rem;">20 - 50 triệu</label>
-                </div>
-                <div class="d-flex align-items-center mb-2">
-                    <input class="mt-0 sidebar-filter" type="radio" name="salary" id="sal_50_plus" value="50_plus" form="masterSearchForm"
-                           {% if selected_salary == '50_plus' %}checked{% endif %}>
-                    <label class="ms-2 text-secondary mb-0" for="sal_50_plus" style="font-size: 0.85rem;">Trên 50 triệu</label>
+                <p class="fw-bold mb-3" style="font-size: 14px; color: #0f172a;">Mức lương</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <input class="btn-check sidebar-filter filter-radio" type="radio" name="salary" id="sal_all" value="" form="masterSearchForm" {% if not selected_salary %}checked{% endif %}>
+                    <label class="filter-chip-btn" for="sal_all">Tất cả</label>
+                    
+                    <input class="btn-check sidebar-filter filter-radio" type="radio" name="salary" id="sal_0_10" value="0_10" form="masterSearchForm" {% if selected_salary == '0_10' %}checked{% endif %}>
+                    <label class="filter-chip-btn" for="sal_0_10">&lt; 10 Tr</label>
+                    
+                    <input class="btn-check sidebar-filter filter-radio" type="radio" name="salary" id="sal_10_20" value="10_20" form="masterSearchForm" {% if selected_salary == '10_20' %}checked{% endif %}>
+                    <label class="filter-chip-btn" for="sal_10_20">10-20 Tr</label>
+                    
+                    <input class="btn-check sidebar-filter filter-radio" type="radio" name="salary" id="sal_20_50" value="20_50" form="masterSearchForm" {% if selected_salary == '20_50' %}checked{% endif %}>
+                    <label class="filter-chip-btn" for="sal_20_50">20-50 Tr</label>
                 </div>
             </div>
 
-            <hr style="border-top: 1px solid #e2e8f0;" class="my-4">
-            
-            <a href="{% url 'home' %}" class="btn btn-reset-filter w-100 fw-bold" style="border-radius: 10px; font-size: 0.85rem; padding: 12px;">
-                <i class="fas fa-redo-alt me-1"></i> Xoá bộ lọc
-            </a>
         </div>
     </div>
 
-    <!-- Danh sách việc làm -->
+    <!-- Cột Phải (Tìm kiếm + Danh sách việc làm) -->
     <div class="col-lg-10 col-md-9">
-        <div class="row">
+        
+        <h4 class="mb-3" style="font-size: 18px; font-weight: 600; color: #0f172a;">Tuyển dụng mới nhất</h4>
+        <div class="row gx-3">
             {% if jobs %}
                 {% for job in jobs %}
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card h-100 border-0 shadow-sm card-hover job-card" 
-                         style="border-radius: 16px; transition: all 0.2s; cursor: pointer; overflow: hidden;"
-                         data-url="{% url 'job_detail' job.id %}">
-                        
-                        <div class="card-body p-4 d-flex flex-column gap-3">
-                            <div class="d-flex align-items-start gap-3">
-                                {% if job.employer.avatar %}
-                                    <img src="{{ job.employer.avatar.url }}" alt="Logo" class="shadow-sm mt-1"
-                                         style="width: 48px; height: 48px; border-radius: 12px; object-fit: cover; flex-shrink: 0;">
-                                {% else %}
-                                    <div class="company-logo d-flex align-items-center justify-content-center fw-bold text-white shadow-sm mt-1"
-                                         style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #f97316, #ea580c); font-size: 1.4rem; flex-shrink: 0;">
-                                        {{ job.employer.company_name|default:"C"|first }}
-                                    </div>
-                                {% endif %}
-                                <div class="company-info flex-grow-1 overflow-hidden">
-                                    <h5 class="card-title fw-bold mb-1" style="font-size: 1rem;">
-                                        <a href="{% url 'job_detail' job.id %}" class="job-title-link text-decoration-none" onclick="event.stopPropagation();">{{ job.title }}</a>
-                                    </h5>
-                                    <h6 class="card-subtitle mb-0 text-truncate company-subtitle">
-                                        <span class="fw-bold">{{ job.employer.company_name|default:"Công ty" }}</span>
-                                        <i class="fas fa-check-circle ms-1" style="color: #0ea5e9;" title="Verified"></i>
-                                    </h6>
+                <div class="col-lg-6 col-md-6 mb-4">
+                    <div class="job-card d-flex flex-column" data-url="{% url 'job_detail' job.id %}">
+                        <div class="d-flex align-items-start gap-3 mb-3">
+                            {% if job.employer.avatar %}
+                                <img src="{{ job.employer.avatar.url }}" alt="Logo" style="width: 44px; height: 44px; border-radius: 8px; border: 1px solid #e2e8f0; object-fit: cover; flex-shrink: 0;">
+                            {% else %}
+                                <div class="d-flex align-items-center justify-content-center fw-bold text-white shadow-sm"
+                                     style="width: 44px; height: 44px; border-radius: 8px; background: #64748b; font-size: 1.2rem; flex-shrink: 0;">
+                                    {{ job.employer.company_name|default:"C"|first }}
                                 </div>
-                            </div>
-
-                            <!-- Tags Kỹ năng -->
-                            {% if job.requirements_list %}
-                            <div class="d-flex flex-wrap gap-1">
-                                {% for tag in job.requirements_list %}
-                                    <span class="badge" style="background: #f1f5f9; color: #475569; font-weight: 500; font-size: 0.72rem; border-radius: 4px; padding: 4px 8px;">{{ tag|upper }}</span>
-                                {% endfor %}
-                            </div>
                             {% endif %}
-
-                            <div class="job-meta mt-auto">
-                                <p class="card-text mb-2 d-flex align-items-start job-location-text">
-                                    <i class="fas fa-map-marker-alt me-2 mt-1"></i>
-                                    <strong>{{ job.location }}</strong>
-                                </p>
-                                <p class="card-text mb-0 d-flex align-items-center fw-bold" style="color: #059669; font-size: 0.9rem;">
-                                    <span class="me-2">💰</span>
-                                    {% if job.salary_min and job.salary_max %}
-                                        {{ job.salary_min|floatformat:0 }} - {{ job.salary_max|floatformat:0 }} Triệu VNĐ
-                                    {% else %}
-                                        Thỏa thuận
-                                    {% endif %}
-                                </p>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <h5 class="mb-1 text-truncate" style="font-size: 18px; font-weight: 600;">
+                                    <a href="{% url 'job_detail' job.id %}" class="text-decoration-none" style="color: #0f172a;" onclick="event.stopPropagation();">{{ job.title }}</a>
+                                </h5>
+                                <div class="text-truncate" style="font-size: 14px; color: #475569;">
+                                    {{ job.employer.company_name|default:"Công ty" }}
+                                    <i class="fas fa-check-circle ms-1" style="color: #0ea5e9; font-size: 12px;"></i>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="card-footer bg-transparent border-0 px-4 pb-4 pt-0 d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center gap-4">
-                                <small class="text-muted" style="font-size: 0.72rem; white-space: nowrap;">
-                                    <i class="far fa-clock me-1"></i> {{ job.updated_at|naturaltime }}
-                                </small>
-                                
-                                <!-- Nút Lưu (Trái tim) -->
-                                {% if user.is_authenticated and user.is_candidate %}
-                                    <a href="{% url 'toggle_save_job' job.id %}" class="btn btn-sm p-0 d-flex align-items-center justify-content-center shadow-none save-btn {% if job.id in saved_job_ids %}active{% endif %}" 
-                                       style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #e2e8f0; background: white; transition: all 0.2s; flex-shrink: 0;"
-                                       onclick="event.stopPropagation();" title="Lưu việc làm">
-                                        {% if job.id in saved_job_ids %}
-                                            <i class="fas fa-heart"></i>
-                                        {% else %}
-                                            <i class="far fa-heart"></i>
-                                        {% endif %}
-                                    </a>
-                                {% endif %}
-                            </div>
+                        <!-- Tags -->
+                        {% if job.requirements_list %}
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            {% for tag in job.requirements_list %}
+                                <span style="background: #f1f5f9; color: #334155; font-weight: 500; font-size: 12px; border-radius: 20px; padding: 4px 12px;">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
 
-                            <form method="POST" action="{% url 'apply_job' job.id %}" style="display:inline;" class="ms-3" onclick="event.stopPropagation();">
+                        <div class="mt-auto d-flex flex-column gap-2">
+                            <div class="d-flex align-items-center" style="font-size: 14px; color: #475569;">
+                                <i class="fas fa-map-marker-alt me-2 text-muted" style="width: 14px; text-align: center;"></i>
+                                <span class="text-truncate" title="{{ job.location }}">{{ job.location|truncatechars:45 }}</span>
+                            </div>
+                            
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span style="font-weight: 600; color: #059669; font-size: 15px;">
+                                    <i class="fas fa-money-bill-wave me-1" style="font-size: 13px; opacity: 0.85;"></i>
+                                    {% if job.salary_min and job.salary_max %}
+                                        {{ job.salary_min|floatformat:0 }} - {{ job.salary_max|floatformat:0 }} Tr
+                                    {% else %}
+                                        Thỏa thuận
+                                    {% endif %}
+                                </span>
+                                <span style="font-size: 13px; color: #475569; font-weight: 500;"><i class="far fa-clock me-1"></i> {{ job.updated_at|naturaltime }}</span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mt-3 pt-3" style="border-top: 1px solid #f1f5f9;">
+                            {% if user.is_authenticated and user.is_candidate %}
+                                <a href="{% url 'toggle_save_job' job.id %}" class="save-btn {% if job.id in saved_job_ids %}active{% endif %}" 
+                                   style="font-size: 18px; text-decoration: none;"
+                                   onclick="event.stopPropagation();" title="Lưu việc làm">
+                                    {% if job.id in saved_job_ids %}
+                                        <i class="fas fa-heart text-danger"></i>
+                                    {% else %}
+                                        <i class="far fa-heart" style="color: #94a3b8;"></i>
+                                    {% endif %}
+                                </a>
+                            {% else %}
+                                <div></div>
+                            {% endif %}
+
+                            <form method="POST" action="{% url 'apply_job' job.id %}" style="margin: 0;" onclick="event.stopPropagation();">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-apply-now px-3"
-                                        style="font-size: 0.82rem; white-space: nowrap; padding: 10px 16px !important;"
+                                <button type="submit" class="btn btn-apply-outline"
                                         onclick="return confirm('Nộp đơn bằng CV gốc đã tải lên trong Profile?');">
-                                    Ứng tuyển nhanh <i class="fas fa-paper-plane ms-1"></i>
+                                    Ứng tuyển <i class="fas fa-arrow-right ms-1" style="font-size: 12px;"></i>
                                 </button>
                             </form>
                         </div>
