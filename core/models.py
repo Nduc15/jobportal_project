@@ -50,7 +50,7 @@ class Job(models.Model):
     salary_max = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     location = models.CharField(max_length=200, db_index=True)
     
-    employer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='jobs')
+    employer = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='jobs')
     is_approved = models.BooleanField(default=False, db_index=True)
     requirements = models.CharField(max_length=500, blank=True, null=True, verbose_name="Yêu cầu kỹ năng")
     

@@ -59,20 +59,29 @@ def index(request):
     }
 
     if q:
-        search_q = q.lower()
-        # Nếu người dùng gõ từ khóa có trong mapping, dùng giá trị chuẩn để tìm kiếm
-        if search_q in mapping:
-            normalized_q = mapping[search_q]
-        else:
-            normalized_q = q
+        processed_q = q.lower()
+        # 2. Chuẩn hóa theo cụm từ (Normalization)
+        # Sắp xếp các key theo chiều dài giảm dần để ưu tiên khớp cụm từ dài trước
+        sorted_keys = sorted(mapping.keys(), key=len, reverse=True)
+        for key in sorted_keys:
+            if key in processed_q:
+                processed_q = processed_q.replace(key, mapping[key])
 
-        jobs = jobs.filter(
-            Q(title__icontains=normalized_q) | 
-            Q(description__icontains=normalized_q) |
-            Q(experience__icontains=normalized_q) |
-            Q(job_type__icontains=normalized_q) |
-            Q(employer__company_name__icontains=normalized_q)
-        )
+        # 3. Tách từ và tìm kiếm (Word Splitting + AND logic)
+        words = processed_q.split()
+        q_obj = Q()
+        for word in words:
+            word_q = (
+                Q(title__icontains=word) |
+                Q(employer__company_name__icontains=word) |
+                Q(requirements__icontains=word) |
+                Q(experience__icontains=word) |
+                Q(job_type__icontains=word) |
+                Q(description__icontains=word)
+            )
+            q_obj &= word_q
+        
+        jobs = jobs.filter(q_obj)
     if location:
         jobs = jobs.filter(location__icontains=location)
     # job_type và experience lọc theo các trường chuyên biệt (dùng icontains để linh hoạt hơn với dữ liệu cũ)
@@ -121,16 +130,21 @@ def register(request):
         email = request.POST.get('email', '').strip().lower()
         phone = request.POST.get('phone')
         password = request.POST.get('password1')
+        password_confirm = request.POST.get('password2')
         user_type = request.POST.get('user_type')
         company_name = request.POST.get('company_name')
 
         if not email:
             messages.error(request, 'Email không được để trống.')
-            return redirect('register')
+            return render(request, 'accounts/register.html', request.POST)
+
+        if password != password_confirm:
+            messages.error(request, 'Mật khẩu xác nhận không khớp.')
+            return render(request, 'accounts/register.html', request.POST)
 
         if User.objects.filter(Q(email=email) | Q(username=email)).exists():
             messages.error(request, 'Email hoặc Tên đăng nhập này đã được khởi tạo trên hệ thống. Vui lòng chuyển sang trang Đăng nhập.')
-            return redirect('register')
+            return render(request, 'accounts/register.html', request.POST)
             
         # Dùng luôn email làm cột username (để đăng nhập)
         user = User.objects.create_user(
@@ -159,7 +173,7 @@ def login(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
     if request.method == 'POST':
-        user_name = request.POST.get('username')
+        user_name = request.POST.get('username', '').strip().lower()
         pass_word = request.POST.get('password')
         user = authenticate(request, username=user_name, password=pass_word)
         if user is not None:
@@ -167,7 +181,8 @@ def login(request):
             return redirect('dashboard')
         else:
             messages.error(request, 'Tên đăng nhập hoặc mật khẩu không chính xác.')
-            return redirect('login')
+            # Trả về template với username để user ko phải gõ lại
+            return render(request, 'accounts/login.html', {'username': user_name})
             
     return render(request, 'accounts/login.html')
 
@@ -243,10 +258,13 @@ def admin_dashboard(request):
     approved_jobs = jobs.filter(is_approved=True).count()
     pending_jobs = jobs.filter(is_approved=False).count()
     
-    from core.models import User
     total_companies = User.objects.filter(is_employer=True).count()
     total_candidates = User.objects.filter(is_candidate=True).count()
     total_cvs = Application.objects.count()
+
+    # Lấy danh sách để quản lý
+    companies = User.objects.filter(is_employer=True).order_by('-date_joined')
+    candidates = User.objects.filter(is_candidate=True).order_by('-date_joined')
 
     context = {
         'jobs': jobs,
@@ -256,8 +274,29 @@ def admin_dashboard(request):
         'total_companies': total_companies,
         'total_candidates': total_candidates,
         'total_cvs': total_cvs,
+        'companies': companies,
+        'candidates': candidates,
     }
     return render(request, 'dashboard/admin_dashboard.html', context)
+
+@login_required
+def delete_user(request, user_id):
+    """Admin xóa người dùng khỏi hệ thống."""
+    if not request.user.is_superuser:
+        messages.error(request, "Bạn không có quyền thực hiện thao tác này.")
+        return redirect('home')
+        
+    user_to_delete = get_object_or_404(User, id=user_id)
+    
+    if user_to_delete == request.user:
+        messages.warning(request, "Bạn không thể tự xóa tài khoản của chính mình!")
+        return redirect('admin_dashboard')
+        
+    username = user_to_delete.username
+    user_to_delete.delete()
+    
+    messages.success(request, f'Đã xóa người dùng "{username}" và toàn bộ dữ liệu liên quan thành công.')
+    return redirect('admin_dashboard')
 
 # ========== ROUTER DASHBOARD ==========
 @login_required

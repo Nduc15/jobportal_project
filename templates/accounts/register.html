@@ -9,31 +9,36 @@
             {% csrf_token %}
             <div class="form-group">
                 <label>Họ và tên</label>
-                <input type="text" name="fullname" placeholder="Nguyễn Văn A" required>
+                <input type="text" name="fullname" value="{{ fullname|default:'' }}" placeholder="Nguyễn Văn A" required>
             </div>
             <div class="form-group">
                 <label>Email</label>
-                <input type="email" name="email" required>
+                <input type="email" name="email" value="{{ email|default:'' }}" required>
             </div>
             <div class="form-group">
                 <label>Số điện thoại</label>
-                <input type="tel" name="phone">
+                <input type="tel" name="phone" value="{{ phone|default:'' }}">
             </div>
             <div class="form-group">
                 <label>Mật khẩu</label>
-                <input type="password" name="password1" required>
+                <input type="password" name="password1" id="password1" required>
+            </div>
+            <div class="form-group">
+                <label>Xác nhận mật khẩu</label>
+                <input type="password" name="password2" id="password2" placeholder="Nhập lại mật khẩu" required>
+                <small id="password-error" style="color: #dc3545; display: none;">Mật khẩu xác nhận không khớp.</small>
             </div>
             <div class="form-group">
                 <label>Bạn là:</label>
                 <div class="radio-group">
-                    <label><input type="radio" name="user_type" value="ungvien" checked> Ứng viên</label>
-                    <label><input type="radio" name="user_type" value="ntd"> Nhà tuyển dụng</label>
+                    <label><input type="radio" name="user_type" value="ungvien" {% if user_type != 'ntd' %}checked{% endif %}> Ứng viên</label>
+                    <label><input type="radio" name="user_type" value="ntd" {% if user_type == 'ntd' %}checked{% endif %}> Nhà tuyển dụng</label>
                 </div>
             </div>
             
             <div class="form-group" id="company-name-group" style="display: none;">
                 <label>Tên công ty</label>
-                <input type="text" name="company_name" id="company_name_input" placeholder="Nhập tên công ty của bạn">
+                <input type="text" name="company_name" id="company_name_input" value="{{ company_name|default:'' }}" placeholder="Nhập tên công ty của bạn">
             </div>
 
             <button type="submit" class="btn-register">Đăng ký ngay</button>
@@ -49,6 +54,11 @@
                 const companyGroup = document.getElementById('company-name-group');
                 const companyInput = document.getElementById('company_name_input');
 
+                const password1Input = document.getElementById('password1');
+                const password2Input = document.getElementById('password2');
+                const passwordError = document.getElementById('password-error');
+                const form = document.querySelector('form');
+
                 function updateCompanyField() {
                     const selectedRole = document.querySelector('input[name="user_type"]:checked').value;
                     if (selectedRole === 'ntd') {
@@ -60,8 +70,28 @@
                     }
                 }
 
+                function validatePasswords() {
+                    if (password2Input.value && password1Input.value !== password2Input.value) {
+                        passwordError.style.display = 'block';
+                        password2Input.setCustomValidity("Invalid");
+                    } else {
+                        passwordError.style.display = 'none';
+                        password2Input.setCustomValidity("");
+                    }
+                }
+
                 radios.forEach(radio => {
                     radio.addEventListener('change', updateCompanyField);
+                });
+
+                password2Input.addEventListener('input', validatePasswords);
+                password1Input.addEventListener('input', validatePasswords);
+
+                form.addEventListener('submit', function(e) {
+                    if (password1Input.value !== password2Input.value) {
+                        e.preventDefault();
+                        validatePasswords();
+                    }
                 });
 
                 // Set initial state

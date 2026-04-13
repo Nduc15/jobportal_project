@@ -163,5 +163,106 @@
     {% endfor %}
 </div>
 
+<!-- User Management Section -->
+<div class="row mb-4 mt-5">
+    <div class="col-12">
+        <h4 style="font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 600; color: #0f172a; margin: 0;">
+            Quản lý người dùng
+        </h4>
+    </div>
+</div>
+
+<div class="row mb-5">
+    <!-- Bảng Công ty -->
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+            <div class="card-header bg-white py-3" style="border-bottom: 1px solid #f1f5f9; border-radius: 16px 16px 0 0;">
+                <h6 class="m-0 fw-bold" style="color: #0f172a;"><i class="fas fa-building me-2 text-primary"></i>Danh sách Công ty</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr style="font-size: 13px; color: #64748b;">
+                                <th class="ps-4">Công ty / Email</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for company in companies %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold" style="color: #0f172a;">{{ company.company_name|default:"Chưa đặt tên" }}</div>
+                                    <div class="text-muted" style="font-size: 12px;">{{ company.email }}</div>
+                                </td>
+                                <td class="text-center pe-4">
+                                    <a href="{% url 'delete_user' company.id %}" class="btn btn-sm btn-delete-user" title="Xóa tài khoản" style="color: #ef4444; background: #fef2f2; border: 1px solid #fee2e2; border-radius: 6px; padding: 4px 12px; font-weight: 600; text-decoration: none; font-size: 12px;">
+                                        <i class="fas fa-trash-alt me-1"></i> Xóa
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="2" class="text-center py-4 text-muted">Chưa có công ty nào</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bảng Ứng viên -->
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+            <div class="card-header bg-white py-3" style="border-bottom: 1px solid #f1f5f9; border-radius: 16px 16px 0 0;">
+                <h6 class="m-0 fw-bold" style="color: #0f172a;"><i class="fas fa-graduate me-2 text-success"></i>Danh sách Ứng viên</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr style="font-size: 13px; color: #64748b;">
+                                <th class="ps-4">Họ tên / Email</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for candidate in candidates %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold" style="color: #0f172a;">{{ candidate.first_name|default:candidate.username }}</div>
+                                    <div class="text-muted" style="font-size: 12px;">{{ candidate.email }}</div>
+                                </td>
+                                <td class="text-center pe-4">
+                                    <a href="{% url 'delete_user' candidate.id %}" class="btn btn-sm btn-delete-user" title="Xóa tài khoản" style="color: #ef4444; background: #fef2f2; border: 1px solid #fee2e2; border-radius: 6px; padding: 4px 12px; font-weight: 600; text-decoration: none; font-size: 12px;">
+                                        <i class="fas fa-trash-alt me-1"></i> Xóa
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="2" class="text-center py-4 text-muted">Chưa có ứng viên nào</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Xác nhận xóa người dùng
+        const deleteButtons = document.querySelectorAll('.btn-delete-user');
+        deleteButtons.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (!confirm('HÀNH ĐỘNG NÀY KHÔNG THỂ HOÀN TÁC.\n\nBạn có chắc chắn muốn xóa vĩnh viễn người dùng này cùng toàn bộ dữ liệu (tin đăng, đơn ứng tuyển...) liên quan không?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+</script>
+
 </div>
 {% endblock %}

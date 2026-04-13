@@ -484,6 +484,16 @@ document.querySelectorAll('.job-card').forEach(card => {
         window.location.href = this.dataset.url;
     });
 });
+
+// Xử lý nút xóa "x" trên thanh tìm kiếm (submit khi xóa trắng)
+const heroSearchInput = document.getElementById('heroSearchInput');
+if (heroSearchInput) {
+    heroSearchInput.addEventListener('search', function() {
+        if (this.value === '') {
+            document.getElementById('masterSearchForm').submit();
+        }
+    });
+}
 </script>
 
 {% endblock %}

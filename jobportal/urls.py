@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 from core import views  # Gọi hàm views từ app core ra
 
 urlpatterns = [
+    path('admin/user/<int:user_id>/delete/', views.delete_user, name='delete_user'),
     path('admin/', admin.site.urls),
     path('', views.index, name='home'),  # Đường dẫn rỗng '' đại diện cho Trang chủ
     path('register/', views.register, name='register'),
