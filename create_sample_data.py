@@ -22,9 +22,9 @@ employer, created = User.objects.get_or_create(
 if created:
     employer.set_password('test1234')
     employer.save()
-    print("✅ Tạo NTD: ntd_fpt / test1234")
+    print("[OK] Tao NTD: ntd_fpt / test1234")
 else:
-    print("ℹ️  NTD ntd_fpt đã tồn tại")
+    print("[INFO] NTD ntd_fpt da ton tai")
 
 # === Tạo Ứng viên ===
 candidate, created = User.objects.get_or_create(
@@ -38,9 +38,9 @@ candidate, created = User.objects.get_or_create(
 if created:
     candidate.set_password('test1234')
     candidate.save()
-    print("✅ Tạo UV: ungvien01 / test1234")
+    print("[OK] Tao UV: ungvien01 / test1234")
 else:
-    print("ℹ️  UV ungvien01 đã tồn tại")
+    print("[INFO] UV ungvien01 da ton tai")
 
 candidate2, created = User.objects.get_or_create(
     username='ungvien02',
@@ -53,9 +53,9 @@ candidate2, created = User.objects.get_or_create(
 if created:
     candidate2.set_password('test1234')
     candidate2.save()
-    print("✅ Tạo UV: ungvien02 / test1234")
+    print("[OK] Tao UV: ungvien02 / test1234")
 else:
-    print("ℹ️  UV ungvien02 đã tồn tại")
+    print("[INFO] UV ungvien02 da ton tai")
 
 # === Tạo Tin tuyển dụng ===
 jobs_data = [
@@ -114,9 +114,9 @@ for jd in jobs_data:
     )
     created_jobs.append(job)
     if created:
-        print(f"✅ Tạo Job: {job.title}")
+        print(f"[OK] Tao Job: {job.title}")
     else:
-        print(f"ℹ️  Job '{job.title}' đã tồn tại")
+        print(f"[INFO] Job '{job.title}' da ton tai")
 
 # === Tạo Application (ứng viên nộp CV) ===
 apps_data = [
@@ -135,12 +135,12 @@ for ad in apps_data:
         defaults={'status': ad['status'], 'cv_file': 'cvs/sample.pdf'}
     )
     if created:
-        print(f"✅ Tạo Application: {ad['candidate'].username} -> {ad['job'].title} ({ad['status']})")
+        print(f"[OK] Tao Application: {ad['candidate'].username} -> {ad['job'].title} ({ad['status']})")
     else:
-        print(f"ℹ️  Application đã tồn tại")
+        print(f"[INFO] Application da ton tai")
 
-print("\n🎉 Hoàn tất tạo dữ liệu mẫu!")
-print("═" * 50)
-print("Tài khoản NTD:    ntd_fpt / test1234")
-print("Tài khoản UV:     ungvien01 / test1234")
-print("Tài khoản UV 2:   ungvien02 / test1234")
+print("\nHoan tat tao du lieu mau!")
+print("=" * 50)
+print("Tai khoan NTD:    ntd_fpt / test1234")
+print("Tai khoan UV:     ungvien01 / test1234")
+print("Tai khoan UV 2:   ungvien02 / test1234")

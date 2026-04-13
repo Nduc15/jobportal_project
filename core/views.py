@@ -114,6 +114,8 @@ def index(request):
     }
     return render(request, 'index.html', context)
 def register(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
     if request.method == 'POST':
         fullname = request.POST.get('fullname')
         email = request.POST.get('email', '').strip().lower()
@@ -147,32 +149,22 @@ def register(request):
             
         user.save()
         
-        # Đăng ký xong thì auto login và chuyển hướng
+        # Đăng ký xong thì auto login và chuyển hướng qua Router trung tâm
         auth_login(request, user)
-        if user.is_candidate:
-            return redirect('candidate_dashboard')
-        elif user.is_superuser:
-            return redirect('admin_dashboard')
-        else:
-            return redirect('employer_dashboard')
+        return redirect('dashboard')
 
     return render(request, 'accounts/register.html')
 
 def login(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
     if request.method == 'POST':
         user_name = request.POST.get('username')
         pass_word = request.POST.get('password')
         user = authenticate(request, username=user_name, password=pass_word)
         if user is not None:
             auth_login(request, user)
-            if user.is_candidate:
-                return redirect('candidate_dashboard')
-            elif user.is_superuser:
-                return redirect('admin_dashboard')
-            elif user.is_employer:
-                return redirect('employer_dashboard')
-            else:
-                return redirect('home')
+            return redirect('dashboard')
         else:
             messages.error(request, 'Tên đăng nhập hoặc mật khẩu không chính xác.')
             return redirect('login')
@@ -517,7 +509,7 @@ def toggle_job_status(request, job_id):
     
     status_text = "Đã duyệt" if job.is_approved else "Đã hủy duyệt"
     messages.success(request, f'Đã cập nhật trạng thái tin "{job.title}" thành: {status_text}')
-    return redirect('employer_dashboard')
+    return redirect('admin_dashboard')
 
 # ========== LƯU VIỆC LÀM (Toggle Save) ==========
 @login_required
