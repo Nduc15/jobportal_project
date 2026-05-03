@@ -5,7 +5,7 @@ from .models import User, Job, Application
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['avatar', 'first_name', 'company_name', 'phone_number', 'skills', 'default_cv', 'company_description']
+        fields = ['avatar', 'first_name', 'company_name', 'phone_number', 'skills', 'default_cv', 'company_description', 'address']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nhập họ và tên đầy đủ'}),
             'company_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nhập tên công ty'}),
@@ -14,6 +14,7 @@ class UserProfileForm(forms.ModelForm):
             'avatar': forms.FileInput(attrs={'class': 'd-none', 'id': 'avatar_upload', 'accept': 'image/*'}),
             'default_cv': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': '.pdf,.doc,.docx'}),
             'company_description': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'Giới thiệu ngắn gọn về công ty của bạn...'}),
+            'address': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ví dụ: Tầng 3, Tòa nhà ABC, Hà Nội'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -21,7 +22,7 @@ class UserProfileForm(forms.ModelForm):
         if self.instance:
             if self.instance.is_superuser:
                 # Nếu là Admin (Superuser): Xóa các trường đặc thù của cả NTD và Ứng viên
-                fields_to_remove = ['company_name', 'skills', 'default_cv', 'company_description']
+                fields_to_remove = ['company_name', 'skills', 'default_cv', 'company_description', 'address']
                 for field in fields_to_remove:
                     if field in self.fields:
                         del self.fields[field]
@@ -39,6 +40,8 @@ class UserProfileForm(forms.ModelForm):
                     del self.fields['company_name']
                 if 'company_description' in self.fields:
                     del self.fields['company_description']
+                if 'address' in self.fields:
+                    del self.fields['address']
 
 class JobForm(forms.ModelForm):
     class Meta:

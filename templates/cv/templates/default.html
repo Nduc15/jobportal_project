@@ -1,0 +1,196 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV - {{ cv.full_name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+        .cv-paper {
+            width: 21cm;
+            min-height: 29.7cm;
+        }
+        .empty-state {
+            color: #9ca3af;
+            font-style: italic;
+        }
+        @media print {
+            @page {
+                size: A4;
+                margin: 0;
+            }
+            body {
+                background: #fff;
+                margin: 0;
+                padding: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .cv-paper {
+                width: 21cm !important;
+                min-height: 29.7cm !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+            }
+            .avoid-break {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+        }
+        @media (max-width: 900px) {
+            .cv-paper {
+                width: 100%;
+                min-height: auto;
+                flex-direction: column;
+            }
+            .cv-sidebar,
+            .cv-main {
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body class="py-6 print:py-0">
+    <div class="no-print mx-auto mb-4 flex w-full max-w-[21cm] items-center justify-between px-4">
+        <a href="#" onclick="history.back(); return false;" class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700">
+            <i class="fas fa-arrow-left"></i>
+            Quay lại
+        </a>
+        <a href="javascript:window.print()" class="inline-flex items-center gap-2 rounded bg-gray-900 px-4 py-2 text-sm font-bold text-white shadow hover:bg-gray-800">
+            <i class="fas fa-print"></i>
+            In / Lưu PDF
+        </a>
+    </div>
+
+    <main class="cv-paper mx-auto flex overflow-hidden bg-white shadow-2xl">
+        <aside class="cv-sidebar w-[35%] bg-[#1e293b] p-[1.5cm_1cm] text-white">
+            <div class="mb-6 flex justify-center">
+                <div class="relative flex h-[120px] w-[120px] items-center justify-center overflow-hidden rounded-full border-[3px] border-white bg-[#334155] shadow-lg">
+                    {% if cv.avatar %}
+                        <img src="{{ cv.avatar.url }}" alt="{{ cv.full_name }}" class="h-full w-full object-cover">
+                    {% else %}
+                        <i class="fas fa-user text-5xl text-[#64748b]"></i>
+                    {% endif %}
+                </div>
+            </div>
+
+            <section class="mb-10 avoid-break">
+                <h3 class="mb-4 border-b border-[#475569] pb-2 text-[10px] font-bold uppercase tracking-widest text-[#94a3b8]">Liên hệ</h3>
+                <div class="space-y-3 text-[13px] text-gray-200">
+                    {% if cv.phone %}
+                    <div class="flex items-center gap-3">
+                        <div class="w-5 text-center"><i class="fas fa-phone text-[#0ea5e9]"></i></div>
+                        <span class="break-all">{{ cv.phone }}</span>
+                    </div>
+                    {% endif %}
+                    {% if cv.email %}
+                    <div class="flex items-center gap-3">
+                        <div class="w-5 text-center"><i class="fas fa-envelope text-[#0ea5e9]"></i></div>
+                        <span class="break-all">{{ cv.email }}</span>
+                    </div>
+                    {% endif %}
+                    {% if cv.address %}
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 pt-0.5 text-center"><i class="fas fa-map-marker-alt text-[#0ea5e9]"></i></div>
+                        <span class="break-words">{{ cv.address }}</span>
+                    </div>
+                    {% endif %}
+                    {% if cv.github %}
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 pt-0.5 text-center"><i class="fab fa-github text-[#0ea5e9]"></i></div>
+                        <span class="break-all">{{ cv.github }}</span>
+                    </div>
+                    {% endif %}
+                    {% if cv.linkedin %}
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 pt-0.5 text-center"><i class="fab fa-linkedin text-[#0ea5e9]"></i></div>
+                        <span class="break-all">{{ cv.linkedin }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            {% if cv.education %}
+            <section class="mb-10 avoid-break">
+                <h3 class="mb-4 border-b border-[#475569] pb-2 text-xs font-bold uppercase tracking-widest text-[#94a3b8]">Học vấn</h3>
+                <div class="space-y-5 text-gray-300">
+                    {% for edu in cv.education %}
+                    <div class="avoid-break">
+                        {% if edu.school %}<p class="text-[13.5px] font-bold leading-snug text-white">{{ edu.school }}</p>{% endif %}
+                        {% if edu.major %}<p class="mt-1 text-[12.5px] font-semibold text-[#0ea5e9]">{{ edu.major }}</p>{% endif %}
+                        {% if edu.time %}<p class="mt-1 text-[11px] italic text-gray-400">{{ edu.time }}</p>{% endif %}
+                        {% if edu.desc %}<p class="mt-1.5 whitespace-pre-line text-[12px] leading-relaxed text-gray-300">{{ edu.desc }}</p>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            {% if cv.skills %}
+            <section class="mb-10 avoid-break">
+                <h3 class="mb-4 border-b border-[#475569] pb-2 text-xs font-bold uppercase tracking-widest text-[#94a3b8]">Kỹ năng</h3>
+                <div class="space-y-4 text-[13px] text-gray-300">
+                    {% for skill in cv.skills %}
+                        {% if skill.name %}
+                        {% with level=skill.level|default:"80"|stringformat:"s" %}
+                        <div class="avoid-break">
+                            <div class="mb-1 flex justify-between">
+                                <span class="font-bold text-white">{{ skill.name }}</span>
+                                <span class="text-[11px] font-semibold text-[#0ea5e9]">{{ level }}%</span>
+                            </div>
+                            <div class="h-1.5 w-full rounded-full bg-[#334155]">
+                                <div class="h-1.5 rounded-full bg-[#0ea5e9] {% if level == '10' %}w-[10%]{% elif level == '20' %}w-[20%]{% elif level == '30' %}w-[30%]{% elif level == '40' %}w-[40%]{% elif level == '50' %}w-[50%]{% elif level == '60' %}w-[60%]{% elif level == '70' %}w-[70%]{% elif level == '90' %}w-[90%]{% elif level == '100' %}w-full{% else %}w-[80%]{% endif %}"></div>
+                            </div>
+                        </div>
+                        {% endwith %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+        </aside>
+
+        <section class="cv-main w-[65%] p-[1.5cm]">
+            <header class="mb-10">
+                <h1 class="mb-2 text-[38px] font-extrabold uppercase text-gray-900" style="line-height: 1.1;">
+                    {% if cv.full_name %}{{ cv.full_name }}{% else %}<span class="empty-state">Chưa cập nhật tên</span>{% endif %}
+                </h1>
+                <h2 class="text-[15px] font-semibold text-gray-600">
+                    {% if cv.target_major %}{{ cv.target_major }}{% else %}<span class="empty-state">Chưa có vị trí ứng tuyển</span>{% endif %}
+                </h2>
+            </header>
+
+            <section class="mb-8 avoid-break">
+                <h3 class="mb-4 inline-block border-b-2 border-[#0ea5e9] pb-1 text-[12px] font-bold uppercase tracking-widest text-gray-900">Mục tiêu nghề nghiệp</h3>
+                <p class="whitespace-pre-line text-[13.5px] leading-relaxed text-gray-800">
+                    {% if cv.objective %}{{ cv.objective }}{% else %}<span class="empty-state">Chưa có mục tiêu nghề nghiệp.</span>{% endif %}
+                </p>
+            </section>
+
+            {% if cv.experience %}
+            <section class="mb-8">
+                <h3 class="mb-5 inline-block border-b-2 border-[#0ea5e9] pb-1 text-[12px] font-bold uppercase tracking-widest text-gray-900">Kinh nghiệm làm việc</h3>
+                <div class="space-y-6">
+                    {% for exp in cv.experience %}
+                    <div class="relative border-l-2 border-gray-200 pl-5 avoid-break">
+                        <div class="absolute -left-[7px] top-1 h-3 w-3 rounded-full border-2 border-[#0ea5e9] bg-white"></div>
+                        {% if exp.position %}<p class="text-[15px] font-extrabold text-gray-900">{{ exp.position }}</p>{% endif %}
+                        {% if exp.company %}<p class="mt-1 text-[13.5px] font-bold uppercase tracking-wide text-[#0ea5e9]">{{ exp.company }}</p>{% endif %}
+                        {% if exp.time %}<p class="mt-1 mb-2.5 flex items-center gap-1 text-[11.5px] italic text-gray-500"><i class="far fa-calendar-alt"></i> {{ exp.time }}</p>{% endif %}
+                        {% if exp.desc %}<p class="whitespace-pre-line text-[13px] leading-relaxed text-gray-800">{{ exp.desc }}</p>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>

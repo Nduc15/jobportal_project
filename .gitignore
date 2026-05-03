@@ -8,3 +8,14 @@ __pycache__/
 # Bỏ qua Database và file upload
 db.sqlite3
 media/
+
+# Bỏ qua file biến môi trường (chứa API key nhạy cảm)
+.env
+
+# Bỏ qua các file nháp và script test
+scratch/
+scratch.py
+test_json_script.py
+test_import.py
+test_encoding.py
+*.log

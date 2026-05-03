@@ -5,6 +5,75 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v={% now 'U' %}">
+<style>
+    .match-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: help;
+    }
+    .match-high { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .match-medium { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+    .match-low { background: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
+    .match-poor { background: #fee2e2; color: #991b1b; border: 1px solid #fecdd3; }
+    .match-na { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; cursor: default; }
+
+    .details-panel {
+        display: none;
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 20px;
+        animation: slideDown 0.2s ease-out;
+    }
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .skill-tag {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+        margin: 2px;
+    }
+    .skill-matched { background: #dcfce7; color: #166534; }
+    .skill-missing { background: #fee2e2; color: #991b1b; }
+    
+    .ai-box {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 16px;
+        height: 100%;
+    }
+    .ai-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+        color: #4338ca;
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+    .btn-recalculate {
+        padding: 4px 8px;
+        font-size: 11px;
+        border-radius: 4px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        color: #64748b;
+        transition: all 0.2s;
+    }
+    .btn-recalculate:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -38,10 +107,25 @@
     <!-- Applicants Table Section -->
     <div class="row mb-4 mt-5">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <h4 style="font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 600; color: #0f172a; margin: 0;">
-                    <i class="fas fa-user-friends me-2" style="color: #2563eb;"></i> Danh sách ứng viên đã nộp CV
+                    <i class="fas fa-user-friends me-2" style="color: #2563eb;"></i> Danh sách ứng viên
                 </h4>
+                
+                <form method="GET" class="d-flex align-items-center gap-2">
+                    <select name="sort" class="form-select form-select-sm" style="width: auto; border-radius: 8px;" onchange="this.form.submit()">
+                        <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Mới nhất</option>
+                        <option value="match" {% if current_sort == 'match' %}selected{% endif %}>Độ phù hợp cao nhất</option>
+                        <option value="oldest" {% if current_sort == 'oldest' %}selected{% endif %}>Cũ nhất</option>
+                    </select>
+                    
+                    <select name="min_score" class="form-select form-select-sm" style="width: auto; border-radius: 8px;" onchange="this.form.submit()">
+                        <option value="">Tất cả điểm</option>
+                        <option value="80" {% if current_min_score == '80' %}selected{% endif %}>Trên 80%</option>
+                        <option value="60" {% if current_min_score == '60' %}selected{% endif %}>Trên 60%</option>
+                        <option value="40" {% if current_min_score == '40' %}selected{% endif %}>Trên 40%</option>
+                    </select>
+                </form>
             </div>
         </div>
     </div>
@@ -52,7 +136,7 @@
                 <tr style="border: none;">
                     <th scope="col" style="padding: 16px; font-weight: 600; color: #64748b; font-size: 13px; text-transform: uppercase;">#</th>
                     <th scope="col" style="padding: 16px; font-weight: 600; color: #64748b; font-size: 13px; text-transform: uppercase;">Tên ứng viên</th>
-                    <th scope="col" style="padding: 16px; font-weight: 600; color: #64748b; font-size: 13px; text-transform: uppercase;">Email</th>
+                    <th scope="col" style="padding: 16px; font-weight: 600; color: #64748b; font-size: 13px; text-transform: uppercase;">Mức phù hợp</th>
                     <th scope="col" style="padding: 16px; font-weight: 600; color: #64748b; font-size: 13px; text-transform: uppercase;">Ngày nộp</th>
                     <th scope="col" style="padding: 16px; font-weight: 600; color: #64748b; font-size: 13px; text-transform: uppercase;">Trạng thái</th>
                     <th scope="col" style="padding: 16px; font-weight: 600; color: #64748b; font-size: 13px; text-transform: uppercase;">File CV</th>
@@ -61,17 +145,34 @@
             </thead>
             <tbody class="border-0">
                 {% for app in applications %}
-                <tr class="applicant-row align-middle" id="applicant-row-{{ app.id }}" style="border-bottom: 1px solid #f1f5f9;">
+                <tr class="applicant-row align-middle" id="applicant-row-{{ app.id }}" style="border-bottom: 1px solid #f1f5f9; cursor: pointer;" onclick="toggleDetails({{ app.id }})">
                     <td style="padding: 16px; color: #94a3b8;">{{ forloop.counter }}</td>
                     <td style="padding: 16px;">
                         <div class="d-flex align-items-center gap-3">
                             <div style="width: 36px; height: 36px; background: #f1f5f9; color: #4338ca; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">
                                 {{ app.candidate.username|first|upper }}
                             </div>
-                            <span class="fw-semibold" style="color: #0f172a;">{{ app.candidate.username }}</span>
+                            <div>
+                                <span class="fw-semibold d-block" style="color: #0f172a;">{{ app.candidate.username }}</span>
+                                <small class="text-muted">{{ app.candidate.email }}</small>
+                            </div>
                         </div>
                     </td>
-                    <td style="padding: 16px; color: #64748b;">{{ app.candidate.email }}</td>
+                    <td style="padding: 16px;">
+                        {% if app.online_cv %}
+                            {% with match=app.match %}
+                            <div class="match-badge {% if match.score >= 80 %}match-high{% elif match.score >= 60 %}match-medium{% elif match.score >= 40 %}match-low{% else %}match-poor{% endif %}" title="Click để xem chi tiết phân tích">
+                                <i class="fas {% if match.score >= 60 %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                                <span class="score-val-{{ app.id }}">{{ match.score }}%</span>
+                            </div>
+                            {% endwith %}
+                        {% else %}
+                            <div class="match-badge match-na" title="Ứng viên nộp CV file, không hỗ trợ AI Matching">
+                                <i class="fas fa-minus-circle"></i>
+                                <span>N/A</span>
+                            </div>
+                        {% endif %}
+                    </td>
                     <td style="padding: 16px; color: #64748b;">{{ app.applied_at|date:"d/m/Y H:i" }}</td>
                     <td style="padding: 16px;">
                         {% if app.status == 'Pending' %}
@@ -82,19 +183,28 @@
                             <span class="badge-status badge-rejected"><i class="fas fa-times me-1"></i> Từ chối</span>
                         {% elif app.status == 'Viewed' %}
                             <span class="badge-status" style="background: #f8fafc; color: #475569; border: 1px solid #e2e8f0;"><i class="fas fa-eye me-1"></i> Đã xem</span>
+                        {% elif app.status == 'Interview' %}
+                            <span class="badge-status" style="background: #ede9fe; color: #5b21b6; border: 1px solid #ddd6fe;"><i class="fas fa-calendar-check me-1"></i> Mời phỏng vấn</span>
                         {% endif %}
                     </td>
                     <td style="padding: 16px;">
                         {% if app.cv_file %}
-                            <a href="{{ app.cv_file.url }}" class="btn d-inline-flex align-items-center gap-2" target="_blank" style="padding: 6px 14px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 8px; font-weight: 600; font-size: 13px; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
+                            <a href="{{ app.cv_file.url }}" class="btn d-inline-flex align-items-center gap-2" target="_blank" style="padding: 6px 14px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 8px; font-weight: 600; font-size: 13px; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'" onclick="event.stopPropagation()">
                                 <i class="fas fa-file-pdf" style="font-size: 15px;"></i> Tải CV
+                            </a>
+                        {% elif app.online_cv %}
+                            <a href="{% url 'cv_view' app.online_cv.id %}" class="btn d-inline-flex align-items-center gap-2" target="_blank" style="padding: 6px 14px; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; border-radius: 8px; font-weight: 600; font-size: 13px; text-decoration: none;" onclick="event.stopPropagation()">
+                                <i class="fas fa-eye"></i> Xem CV Online
                             </a>
                         {% else %}
                             <span class="text-muted">N/A</span>
                         {% endif %}
                     </td>
                     <td style="padding: 16px; text-align: right;">
-                        <div class="d-flex align-items-center justify-content-end gap-2">
+                        <div class="d-flex align-items-center justify-content-end gap-2" onclick="event.stopPropagation()">
+                            <button type="button" class="btn" onclick="event.stopPropagation(); toggleDetails({{ app.id }});" style="padding: 6px 12px; background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; border-radius: 6px; font-weight: 600; font-size: 13px;">
+                                <i class="fas fa-calendar-plus me-1"></i>{% if app.interview %}Sửa lịch{% else %}Mời PV{% endif %}
+                            </button>
                             {% if app.status != 'Accepted' %}
                                 <form method="POST" action="{% url 'update_application_status' app.id %}" style="display:inline;">
                                     {% csrf_token %}
@@ -116,6 +226,168 @@
                         </div>
                     </td>
                 </tr>
+                <!-- Matching Details Panel -->
+                <tr id="details-{{ app.id }}" class="details-panel">
+                    <td colspan="7">
+                        {% if app.online_cv %}
+                        <div class="row g-3">
+                            <!-- Bảng điểm chi tiết -->
+                            <div class="col-md-3">
+                                <div class="ai-box">
+                                    <div class="ai-header">
+                                        <i class="fas fa-chart-bar"></i> Bảng điểm
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-borderless mb-0" style="font-size: 13px;">
+                                            <tbody>
+                                                <tr>
+                                                    <td class="text-muted">Kỹ năng</td>
+                                                    <td class="text-end fw-bold text-primary"><span id="skill-score-{{ app.id }}">{{ app.match.skill_score }}</span>/50</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-muted">Kinh nghiệm</td>
+                                                    <td class="text-end fw-bold text-primary"><span id="exp-score-{{ app.id }}">{{ app.match.exp_score }}</span>/20</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-muted">Sự phù hợp</td>
+                                                    <td class="text-end fw-bold text-primary"><span id="desc-score-{{ app.id }}">{{ app.match.desc_score }}</span>/15</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-muted">Dự án</td>
+                                                    <td class="text-end fw-bold text-primary"><span id="project-score-{{ app.id }}">{{ app.match.project_score }}</span>/10</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-muted">Điểm thưởng</td>
+                                                    <td class="text-end fw-bold text-primary"><span id="bonus-score-{{ app.id }}">{{ app.match.bonus_score }}</span>/5</td>
+                                                </tr>
+                                                <tr class="border-top">
+                                                    <td class="fw-bold">Tổng cộng</td>
+                                                    <td class="text-end fw-bold text-success" style="font-size: 15px;"><span id="total-score-{{ app.id }}">{{ app.match.score }}</span>%</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="ai-box">
+                                    <div class="ai-header">
+                                        <i class="fas fa-brain"></i> Phân tích Kỹ năng
+                                        <button class="btn btn-recalculate ms-auto" onclick="recalculateMatch({{ app.id }}, event)">
+                                            <i class="fas fa-sync-alt me-1"></i> Tính lại
+                                        </button>
+                                    </div>
+                                    <div class="mb-3">
+                                        <h6 class="text-muted small fw-bold mb-2">KỸ NĂNG PHÙ HỢP</h6>
+                                        <div id="matched-skills-{{ app.id }}">
+                                            {% for skill in app.match.matched_skills %}
+                                                <span class="skill-tag skill-matched">{{ skill }}</span>
+                                            {% empty %}
+                                                <span class="text-muted small">Không tìm thấy kỹ năng trùng khớp</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h6 class="text-muted small fw-bold mb-2">KỸ NĂNG CÒN THIẾU</h6>
+                                        <div id="missing-skills-{{ app.id }}">
+                                            {% for skill in app.match.missing_skills %}
+                                                <span class="skill-tag skill-missing">{{ skill }}</span>
+                                            {% empty %}
+                                                <span class="text-muted small">Ứng viên đáp ứng đầy đủ yêu cầu</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="ai-box">
+                                    <div class="ai-header">
+                                        <i class="fas fa-magic"></i> Nhận xét từ AI Trợ lý
+                                    </div>
+                                    <p id="summary-{{ app.id }}" class="mb-3" style="font-size: 14px; line-height: 1.6; color: #334155;">
+                                        {{ app.match.summary|default:"Đang cập nhật phân tích..." }}
+                                    </p>
+                                    <div class="ai-interview-questions" style="background: #f1f5f9; border-radius: 8px; padding: 12px;">
+                                        <h6 class="small fw-bold mb-2" style="color: #4338ca;">Gợi ý câu hỏi phỏng vấn:</h6>
+                                        <ul id="questions-{{ app.id }}" class="mb-0 ps-3" style="font-size: 13px; color: #475569;">
+                                            {% for q in app.match.interview_questions %}
+                                                <li class="mb-1">{{ q }}</li>
+                                            {% empty %}
+                                                <li>Không có câu hỏi gợi ý.</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4 bg-white rounded-3 border">
+                            <i class="fas fa-file-pdf mb-2 text-muted" style="font-size: 24px;"></i>
+                            <h6 class="fw-bold mb-1">Không hỗ trợ phân tích AI cho File CV</h6>
+                            <p class="text-muted small mb-0">Hệ thống AI Matching chỉ hỗ trợ cho các ứng viên nộp hồ sơ bằng CV trực tuyến (Online CV).</p>
+                            <p class="text-muted small">Bạn có thể tải file CV của ứng viên về để xem chi tiết.</p>
+                        </div>
+                        {% endif %}
+
+                        {% if app.interview %}
+                        <div class="mt-3 p-3 rounded-3 border" style="background: #f5f3ff; border-color: #ddd6fe !important;">
+                            <div class="d-flex flex-column flex-md-row justify-content-between gap-2">
+                                <div>
+                                    <h6 class="fw-bold mb-1" style="color: #5b21b6;"><i class="fas fa-calendar-check me-2"></i>Lịch phỏng vấn đã gửi</h6>
+                                    <div class="small" style="color: #475569;">
+                                        {{ app.interview.scheduled_at|date:"d/m/Y H:i" }} · {{ app.interview.get_mode_display }}
+                                    </div>
+                                    <div class="small mt-1" style="color: #334155;">{{ app.interview.location }}</div>
+                                    {% if app.interview.note %}
+                                        <div class="small text-muted mt-1">{{ app.interview.note }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <form method="POST" action="{% url 'schedule_interview' app.id %}" class="mt-3 p-3 rounded-3 border bg-white" onclick="event.stopPropagation()">
+                            {% csrf_token %}
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                                <h6 class="fw-bold mb-0" style="color: #4338ca;">
+                                    <i class="fas fa-calendar-plus me-2"></i>{% if app.interview %}Cập nhật lịch phỏng vấn{% else %}Mời phỏng vấn{% endif %}
+                                </h6>
+                                <span class="small text-muted">{{ app.candidate.email }}</span>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold">Thời gian</label>
+                                    <input type="datetime-local" name="scheduled_at" class="form-control form-control-sm" value="{% if app.interview %}{{ app.interview.scheduled_at|date:'Y-m-d\TH:i' }}{% endif %}" required>
+                                    {% if app.interview %}
+                                        <div class="form-text">Hiện tại: {{ app.interview.scheduled_at|date:"d/m/Y H:i" }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold">Hình thức</label>
+                                    <select name="mode" class="form-select form-select-sm">
+                                        <option value="online" {% if app.interview.mode == 'online' %}selected{% endif %}>Online</option>
+                                        <option value="offline" {% if app.interview.mode == 'offline' %}selected{% endif %}>Tại văn phòng</option>
+                                        <option value="phone" {% if app.interview.mode == 'phone' %}selected{% endif %}>Gọi điện</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label small fw-semibold">Link hoặc địa điểm</label>
+                                    <input type="text" name="location" class="form-control form-control-sm" value="{% if app.interview %}{{ app.interview.location }}{% endif %}" placeholder="Google Meet hoặc địa chỉ văn phòng" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-semibold">Ghi chú</label>
+                                    <textarea name="note" rows="2" class="form-control form-control-sm" placeholder="VD: Vui lòng chuẩn bị portfolio hoặc bật camera khi phỏng vấn.">{% if app.interview %}{{ app.interview.note }}{% endif %}</textarea>
+                                </div>
+                                <div class="col-12 text-end">
+                                    <button type="submit" class="btn btn-sm" style="background: #4338ca; color: white; font-weight: 600;">
+                                        Gửi lịch phỏng vấn
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
                 {% empty %}
                 <tr>
                     <td colspan="7" class="text-center py-5">
@@ -131,4 +403,112 @@
         </table>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleDetails(appId) {
+        const panel = document.getElementById(`details-${appId}`);
+        if (!panel) return;
+        
+        // Dùng getComputedStyle để kiểm tra trạng thái thực tế
+        const display = window.getComputedStyle(panel).display;
+        const isVisible = display !== 'none';
+        
+        // Ẩn tất cả các panel khác
+        document.querySelectorAll('.details-panel').forEach(p => {
+            if (p.id !== `details-${appId}`) p.style.display = 'none';
+        });
+        
+        // Toggle panel hiện tại
+        panel.style.display = isVisible ? 'none' : 'table-row';
+    }
+
+    async function recalculateMatch(appId, event) {
+        if (event) event.stopPropagation();
+        const btn = document.querySelector(`#details-${appId} .btn-recalculate`);
+        const icon = btn.querySelector('i');
+        const summaryText = document.getElementById(`summary-${appId}`);
+        const questionsList = document.getElementById(`questions-${appId}`);
+        const scoreVal = document.querySelector(`.score-val-${appId}`);
+        const matchedBox = document.getElementById(`matched-skills-${appId}`);
+        const missingBox = document.getElementById(`missing-skills-${appId}`);
+        const badge = scoreVal.closest('.match-badge');
+
+        icon.classList.add('fa-spin');
+        btn.disabled = true;
+
+        try {
+            const response = await fetch(`/dashboard/employer/application/${appId}/match/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                }
+            });
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                // Update score and color
+                scoreVal.innerText = data.score + '%';
+                badge.className = 'match-badge ' + (data.score >= 80 ? 'match-high' : data.score >= 60 ? 'match-medium' : data.score >= 40 ? 'match-low' : 'match-poor');
+                
+                // Update Detailed Scores
+                document.getElementById(`skill-score-${appId}`).innerText = data.skill_score;
+                document.getElementById(`exp-score-${appId}`).innerText = data.exp_score;
+                document.getElementById(`desc-score-${appId}`).innerText = data.desc_score;
+                document.getElementById(`project-score-${appId}`).innerText = data.project_score;
+                document.getElementById(`bonus-score-${appId}`).innerText = data.bonus_score;
+                document.getElementById(`total-score-${appId}`).innerText = data.score;
+
+                // Update skills (Safely)
+                matchedBox.innerHTML = '';
+                if (data.matched_skills.length > 0) {
+                    data.matched_skills.forEach(s => {
+                        const span = document.createElement('span');
+                        span.className = 'skill-tag skill-matched';
+                        span.textContent = s;
+                        matchedBox.appendChild(span);
+                    });
+                } else {
+                    matchedBox.innerHTML = '<span class="text-muted small">Không tìm thấy kỹ năng trùng khớp</span>';
+                }
+                    
+                missingBox.innerHTML = '';
+                if (data.missing_skills.length > 0) {
+                    data.missing_skills.forEach(s => {
+                        const span = document.createElement('span');
+                        span.className = 'skill-tag skill-missing';
+                        span.textContent = s;
+                        missingBox.appendChild(span);
+                    });
+                } else {
+                    missingBox.innerHTML = '<span class="text-muted small">Ứng viên đáp ứng đầy đủ yêu cầu</span>';
+                }
+                
+                // Update AI content
+                summaryText.textContent = data.summary || "AI không đưa ra được nhận xét.";
+                
+                questionsList.innerHTML = '';
+                if (data.interview_questions.length > 0) {
+                    data.interview_questions.forEach(q => {
+                        const li = document.createElement('li');
+                        li.className = 'mb-1';
+                        li.textContent = q;
+                        questionsList.appendChild(li);
+                    });
+                } else {
+                    questionsList.innerHTML = '<li>Không có câu hỏi gợi ý.</li>';
+                }
+            } else {
+                alert(data.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi tính toán lại.');
+        } finally {
+            icon.classList.remove('fa-spin');
+            btn.disabled = false;
+        }
+    }
+</script>
 {% endblock %}

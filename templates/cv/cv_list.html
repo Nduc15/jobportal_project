@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Quản lý CV trực tuyến{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.tailwindcss.com"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <h2 class="text-3xl font-bold text-gray-800">Quản lý CV của bạn</h2>
+        <a href="{% url 'cv_builder' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow-md transition duration-300">
+            <i class="fas fa-plus mr-2"></i> Tạo CV mới
+        </a>
+    </div>
+
+    {% if cvs %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for cv in cvs %}
+        <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition duration-300 flex flex-col">
+            <div class="h-40 bg-slate-100 relative overflow-hidden group">
+                <div class="absolute inset-0 flex items-center justify-center p-5">
+                    <div class="h-28 w-20 bg-white shadow-md border border-slate-200 flex overflow-hidden">
+                        <div class="w-[35%] bg-slate-800 p-1.5">
+                            <div class="w-5 h-5 bg-slate-500 rounded-full mx-auto mb-2"></div>
+                            <div class="h-1 bg-sky-400 rounded mb-1"></div>
+                            <div class="h-1 bg-slate-500 rounded mb-1"></div>
+                            <div class="h-1 bg-slate-500 rounded mb-3"></div>
+                            <div class="h-1 bg-sky-400 rounded mb-1"></div>
+                            <div class="h-1 bg-slate-500 rounded"></div>
+                        </div>
+                        <div class="flex-1 p-2">
+                            <div class="h-2 bg-slate-900 rounded mb-1.5 w-11"></div>
+                            <div class="h-1.5 bg-sky-400 rounded mb-3 w-8"></div>
+                            <div class="h-1 bg-slate-300 rounded mb-1"></div>
+                            <div class="h-1 bg-slate-300 rounded mb-1"></div>
+                            <div class="h-1 bg-slate-300 rounded mb-3 w-9"></div>
+                            <div class="h-1.5 bg-slate-800 rounded mb-2 w-10"></div>
+                            <div class="h-1 bg-slate-300 rounded mb-1"></div>
+                            <div class="h-1 bg-slate-300 rounded w-8"></div>
+                        </div>
+                    </div>
+                    <span class="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs font-semibold text-slate-600 bg-white/90 border border-slate-200 px-3 py-1 rounded-full shadow-sm">
+                        Mẫu chuyên nghiệp
+                    </span>
+                </div>
+
+                <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 gap-3">
+                    <a href="{% url 'cv_view' cv.id %}" target="_blank" class="bg-white text-gray-800 hover:bg-gray-100 px-4 py-2 rounded shadow text-sm font-medium">
+                        <i class="fas fa-eye mr-1"></i> Xem / In
+                    </a>
+                    <a href="{% url 'cv_builder_edit' cv.id %}" class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded shadow text-sm font-medium">
+                        <i class="fas fa-edit mr-1"></i> Sửa
+                    </a>
+                </div>
+            </div>
+
+            <div class="p-5 flex-grow flex flex-col justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-1 truncate" title="{{ cv.title }}">{{ cv.title }}</h3>
+                    <p class="text-sm text-gray-500 mb-3">
+                        <i class="fas fa-briefcase text-gray-400 w-4"></i>
+                        {{ cv.target_major|default:"Chưa cập nhật vị trí" }}
+                    </p>
+                    <p class="text-xs text-gray-400">
+                        <i class="far fa-clock mr-1"></i>
+                        Cập nhật: {{ cv.updated_at|date:"d/m/Y H:i" }}
+                    </p>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
+                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-medium">Trực tuyến</span>
+                    <form action="{% url 'cv_delete' cv.id %}" method="POST" class="inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa CV này? Hành động này không thể hoàn tác.');">
+                        {% csrf_token %}
+                        <button type="submit" class="text-red-500 hover:text-red-700 p-1" title="Xóa CV">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl shadow border border-gray-100 p-12 text-center">
+        <div class="w-20 h-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-file-signature text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">Bạn chưa có CV nào</h3>
+        <p class="text-gray-500 mb-6">Tạo một CV chuyên nghiệp ngay bây giờ để gây ấn tượng với nhà tuyển dụng.</p>
+        <a href="{% url 'cv_builder' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium shadow transition duration-300 inline-block">
+            Bắt đầu tạo CV
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

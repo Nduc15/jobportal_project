@@ -1,0 +1,957 @@
+﻿{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if cv %}Sửa CV: {{ cv.title }}{% else %}Tạo CV Mới{% endif %}{% endblock %}
+
+{% block extra_css %}
+<!-- Tailwind CSS for CV Builder -->
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    /* Ẩn khi in PDF */
+    @media print {
+        header, footer, .no-print { display: none !important; }
+        body { background-color: white; margin: 0; padding: 0; }
+        .print-only { display: block !important; }
+        .cv-preview-container {
+            width: 100% !important; height: auto !important;
+            overflow: visible !important; box-shadow: none !important;
+            padding: 0 !important; margin: 0 !important;
+            background: transparent !important;
+        }
+        .empty-state { display: none !important; }
+    }
+    .print-only { display: none; }
+
+    /* Tùy chỉnh thanh cuộn cho form */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+    /* Empty state style */
+    .empty-state {
+        color: #9CA3AF;
+        font-style: italic;
+        font-size: 13px;
+    }
+
+    /* Visual hierarchy typography */
+    #preview-fullname {
+        letter-spacing: 0.5px;
+    }
+    /* Hiệu ứng nút AI Premium */
+    .btn-ai-premium {
+        background: linear-gradient(135deg, #0ea5e9, #6366f1, #a855f7);
+        background-size: 200% 200%;
+        animation: gradientMove 3s ease infinite;
+        position: relative;
+        overflow: hidden;
+        border: none;
+        color: white;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+    .btn-ai-premium::before {
+        content: '';
+        position: absolute;
+        top: -50%; left: -50%;
+        width: 200%; height: 200%;
+        background: rgba(255, 255, 255, 0.1);
+        transform: rotate(45deg);
+        transition: 0.5s;
+    }
+    .btn-ai-premium:hover::before {
+        left: 100%;
+    }
+    .btn-ai-premium:hover {
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+        transform: translateY(-1px);
+    }
+    @keyframes gradientMove {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    .ai-sparkle { animation: sparkle 1.5s infinite; }
+    @keyframes sparkle {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.2); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="h-[calc(100vh-64px)] overflow-hidden flex flex-col md:flex-row bg-gray-100 no-print relative">
+    
+    <!-- Toast Notification -->
+    <div id="toast-success" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-[#0ea5e9] text-white px-6 py-3 rounded shadow-lg z-50 transition-all duration-300 translate-y-[-150%] opacity-0 flex items-center">
+        <i class="fas fa-check-circle mr-2 text-xl"></i>
+        <span class="font-medium">Lưu CV thành công!</span>
+    </div>
+
+    <!-- LEFT PANEL: FORM -->
+    <div class="w-full md:w-1/2 lg:w-5/12 h-full bg-white border-r border-gray-200 flex flex-col relative z-10 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.1)]">
+        
+        <!-- Header Form -->
+        <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center shrink-0">
+            <div>
+                <h2 class="font-bold text-gray-800 text-lg">
+                    <a href="{% url 'cv_list' %}" class="text-gray-400 hover:text-[#0ea5e9] mr-2"><i class="fas fa-arrow-left"></i></a>
+                    {% if cv %}Chỉnh sửa CV{% else %}Tạo CV mới{% endif %}
+                </h2>
+                <p class="text-xs text-gray-500 mt-1">Hệ thống tự động cập nhật bản xem trước</p>
+            </div>
+            <div class="flex gap-2">
+                <button type="button" id="btn-save" class="bg-[#0ea5e9] hover:bg-[#0284c7] active:scale-95 text-white px-4 py-2 rounded shadow text-sm font-semibold transition-all duration-200 flex items-center">
+                    <i class="fas fa-save mr-2"></i> <span id="save-text">Lưu CV</span>
+                    <i class="fas fa-spinner fa-spin ml-2 hidden" id="save-spinner"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Form Body (Scrollable) -->
+        <div class="flex-grow overflow-y-auto custom-scrollbar p-5 pb-20 relative">
+            <!-- AI Status Badge (Fixed in corner) -->
+            <div class="fixed bottom-6 left-6 z-50 flex items-center gap-3 bg-white/90 backdrop-blur-md border border-indigo-100 p-3 rounded-2xl shadow-2xl shadow-indigo-200/50">
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <div class="absolute inset-0 w-3 h-3 bg-green-500 rounded-full animate-ping opacity-75"></div>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-indigo-600 uppercase tracking-widest leading-none mb-1">AI Assistant Active</p>
+                        <p class="text-[11px] font-semibold text-gray-700">Trợ lý AI Gemini đang sẵn sàng</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1 ml-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-200"></span>
+                </div>
+            </div>
+
+            <form id="cv-form" method="POST" enctype="multipart/form-data" action="{% if cv %}{% url 'cv_builder_edit' cv.id %}{% else %}{% url 'cv_builder' %}{% endif %}">
+                {% csrf_token %}
+                <input type="hidden" name="education" id="hidden_education">
+                <input type="hidden" name="experience" id="hidden_experience">
+                <input type="hidden" name="skills" id="hidden_skills">
+
+                <!-- 1. THÔNG TIN CHUNG -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 border-b-2 border-gray-200 pb-2">1. Thông tin chung</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Tên CV (Quản lý nội bộ) <span class="text-red-500">*</span></label>
+                            <input type="text" name="title" value="{{ cv.title|default:'CV Backend Developer' }}" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9] outline-none transition-shadow" required>
+                        </div>
+                        
+                        <!-- Avatar Upload -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Ảnh đại diện</label>
+                            <div class="flex items-center gap-4">
+                                <div class="w-16 h-16 rounded-full bg-gray-200 border border-gray-300 overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
+                                    <img id="avatar-preview-form" src="{% if cv.avatar %}{{ cv.avatar.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" class="w-full h-full object-cover">
+                                </div>
+                                <input type="file" name="avatar" id="avatar-input" accept="image/*" class="text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-[#0ea5e9] hover:file:bg-blue-100 transition-colors">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Họ và tên <span class="text-red-500">*</span></label>
+                                <input type="text" name="full_name" value="{{ cv.full_name|default:initial_data.full_name }}" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9] outline-none transition-shadow cv-input font-medium" data-target="preview-fullname" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Vị trí ứng tuyển <span class="text-red-500">*</span></label>
+                                <input type="text" name="target_major" value="{{ cv.target_major|default:'' }}" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9] outline-none transition-shadow cv-input font-medium" data-target="preview-major" placeholder="VD: Backend Developer" required>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Email <span class="text-red-500">*</span></label>
+                                <input type="email" name="email" value="{{ cv.email|default:initial_data.email }}" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9] outline-none transition-shadow cv-input" data-target="preview-email" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Số điện thoại <span class="text-red-500">*</span></label>
+                                <input type="tel" name="phone" value="{{ cv.phone|default:initial_data.phone }}" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9] outline-none transition-shadow cv-input" data-target="preview-phone" required>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Địa chỉ</label>
+                            <input type="text" name="address" value="{{ cv.address|default:'' }}" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9] outline-none transition-shadow cv-input" data-target="preview-address" placeholder="VD: Quận 1, TP. Hồ Chí Minh">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">GitHub</label>
+                                <input type="url" name="github" value="{{ cv.github|default:'' }}" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9] outline-none transition-shadow cv-input" data-target="preview-github" placeholder="https://github.com/...">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">LinkedIn</label>
+                                <input type="url" name="linkedin" value="{{ cv.linkedin|default:'' }}" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9] outline-none transition-shadow cv-input" data-target="preview-linkedin" placeholder="https://linkedin.com/in/...">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Mục tiêu nghề nghiệp</label>
+                            <textarea name="objective" rows="4" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9] outline-none transition-shadow cv-input" data-target="preview-objective" placeholder="Viết một đoạn ngắn giới thiệu bản thân và mục tiêu nghề nghiệp...">{{ cv.objective|default:'' }}</textarea>
+                            <!-- Nút AI Mới: Rực rỡ hơn -->
+                            <button type="button" 
+                                onclick="callAiAssistant('objective')"
+                                class="mt-2 w-full flex items-center justify-center gap-2 btn-ai-premium px-3 py-2.5 rounded-lg text-sm font-bold transition-all">
+                                <span class="ai-sparkle">✨</span>
+                                <span>Tạo mục tiêu ấn tượng bằng AI</span>
+                                <i class="fas fa-spinner fa-spin hidden" id="ai-spinner-objective"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. HỌC VẤN -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-4 border-b-2 border-gray-200 pb-2">
+                        <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider">2. Học vấn</h3>
+                        <button type="button" class="text-[#0ea5e9] hover:text-[#0284c7] hover:bg-blue-50 px-2 py-1 rounded text-xs font-semibold btn-add-item transition-colors" data-section="education">
+                            <i class="fas fa-plus mr-1"></i> Thêm học vấn
+                        </button>
+                    </div>
+                    
+                    <div id="education-container" class="space-y-4 relative pl-4 border-l-2 border-[#0ea5e9]">
+                        <!-- Dynamic items -->
+                    </div>
+                </div>
+
+                <!-- 3. KINH NGHIỆM -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-4 border-b-2 border-gray-200 pb-2">
+                        <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider">3. Kinh nghiệm làm việc</h3>
+                        <button type="button" class="text-[#0ea5e9] hover:text-[#0284c7] hover:bg-blue-50 px-2 py-1 rounded text-xs font-semibold btn-add-item transition-colors" data-section="experience">
+                            <i class="fas fa-plus mr-1"></i> Thêm kinh nghiệm
+                        </button>
+                    </div>
+                    
+                    <div id="experience-container" class="space-y-4 relative pl-4 border-l-2 border-[#0ea5e9]">
+                        <!-- Dynamic items -->
+                    </div>
+                </div>
+
+                <!-- 4. KỸ NĂNG -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-4 border-b-2 border-gray-200 pb-2">
+                        <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider">4. Kỹ năng</h3>
+                        <button type="button" class="text-[#0ea5e9] hover:text-[#0284c7] hover:bg-blue-50 px-2 py-1 rounded text-xs font-semibold btn-add-item transition-colors" data-section="skills">
+                            <i class="fas fa-plus mr-1"></i> Thêm kỹ năng
+                        </button>
+                    </div>
+                    
+                    <button type="button" 
+                        onclick="callAiAssistant('skills')"
+                        class="w-full flex items-center justify-center gap-2 bg-white border-2 border-[#6366f1] text-[#6366f1] hover:bg-[#6366f1] hover:text-white px-3 py-2 rounded-lg text-xs font-bold transition-all mb-3">
+                        ✨ Gợi ý kỹ năng theo vị trí (AI)
+                    </button>
+                    <div id="skills-container" class="space-y-3">
+                        <!-- Dynamic items -->
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+    
+    <!-- RIGHT PANEL: PREVIEW -->
+    <div class="w-full md:w-1/2 lg:w-7/12 h-full bg-gray-500 overflow-y-auto custom-scrollbar p-4 md:p-8 flex justify-center cv-preview-container relative" id="preview-scroll-container">
+        
+        <!-- Đưa nút Tải PDF ra góc trên cố định, không che CV -->
+        <div class="absolute top-4 right-6 z-20 no-print">
+            <a href="javascript:window.print()" class="border-2 border-[#0ea5e9] text-[#0ea5e9] hover:bg-[#0ea5e9] hover:text-white px-4 py-2 rounded shadow-lg text-sm font-semibold transition-all duration-200 flex items-center bg-white">
+                <i class="fas fa-download mr-2"></i> Tải PDF
+            </a>
+        </div>
+
+        <!-- A4 Page Wrapper -->
+        <div class="bg-white shadow-2xl w-full max-w-[21cm] min-h-[29.7cm] flex text-gray-800 relative overflow-hidden mt-8 md:mt-0" id="cv-paper">
+            
+            <!-- CỘT TRÁI (SIDEBAR) -->
+            <div class="w-[35%] bg-[#1e293b] text-white p-[1.5cm_1cm]">
+                
+                <!-- Avatar -->
+                <div class="flex justify-center mb-6">
+                    <div class="w-[120px] h-[120px] rounded-full border-[3px] border-white shadow-lg overflow-hidden bg-[#334155] flex items-center justify-center relative" id="avatar-wrapper">
+                        {% if cv.avatar %}
+                            <img id="avatar-preview-cv" src="{{ cv.avatar.url }}" class="w-full h-full object-cover">
+                        {% else %}
+                            <!-- SVG User Placeholder -->
+                            <svg id="avatar-preview-cv-placeholder" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#64748b" class="w-16 h-16">
+                                <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd"/>
+                            </svg>
+                            <img id="avatar-preview-cv" src="" class="w-full h-full object-cover absolute inset-0 hidden">
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="mb-10">
+                    <h3 class="text-[10px] font-bold uppercase tracking-widest border-b border-[#475569] pb-2 mb-4 text-[#94a3b8]">Liên hệ</h3>
+                    <div class="space-y-3 text-[13px] text-gray-200" id="preview-contact-container">
+                        <div class="flex items-center gap-3 contact-row {% if not cv.phone %}hidden{% endif %}" id="row-phone">
+                            <div class="w-5 flex justify-center"><i class="fas fa-phone text-[#0ea5e9]"></i></div>
+                            <span id="preview-phone" class="break-all">{{ cv.phone }}</span>
+                        </div>
+                        <div class="flex items-center gap-3 contact-row {% if not cv.email %}hidden{% endif %}" id="row-email">
+                            <div class="w-5 flex justify-center"><i class="fas fa-envelope text-[#0ea5e9]"></i></div>
+                            <span id="preview-email" class="break-all">{{ cv.email }}</span>
+                        </div>
+                        <div class="flex items-center gap-3 contact-row {% if not cv.address %}hidden{% endif %}" id="row-address">
+                            <div class="w-5 flex justify-center"><i class="fas fa-map-marker-alt text-[#0ea5e9]"></i></div>
+                            <span id="preview-address" class="break-words">{{ cv.address }}</span>
+                        </div>
+                        <div class="flex items-center gap-3 contact-row {% if not cv.github %}hidden{% endif %}" id="row-github">
+                            <div class="w-5 flex justify-center"><i class="fab fa-github text-[#0ea5e9]"></i></div>
+                            <span id="preview-github" class="break-all">{{ cv.github }}</span>
+                        </div>
+                        <div class="flex items-center gap-3 contact-row {% if not cv.linkedin %}hidden{% endif %}" id="row-linkedin">
+                            <div class="w-5 flex justify-center"><i class="fab fa-linkedin text-[#0ea5e9]"></i></div>
+                            <span id="preview-linkedin" class="break-all">{{ cv.linkedin }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Education -->
+                <div class="mb-10">
+                    <h3 class="text-xs font-bold uppercase tracking-widest border-b border-[#475569] pb-2 mb-4 text-[#94a3b8]">Học vấn</h3>
+                    <div id="preview-education-container" class="space-y-5 text-gray-300">
+                        <!-- JS inject -->
+                    </div>
+                </div>
+
+                <!-- Skills -->
+                <div class="mb-10">
+                    <h3 class="text-xs font-bold uppercase tracking-widest border-b border-[#475569] pb-2 mb-4 text-[#94a3b8]">Kỹ năng</h3>
+                    <div id="preview-skills-container" class="space-y-4 text-[13px] text-gray-300">
+                        <!-- JS inject -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- CỘT PHẢI (MAIN CONTENT) -->
+            <div class="w-[65%] p-[1.5cm]">
+                
+                <!-- Name & Title -->
+                <div class="mb-10">
+                    <h1 class="text-[38px] font-extrabold text-gray-900 uppercase mb-2" id="preview-fullname" style="line-height: 1.1; letter-spacing: 0.5px;">
+                        {% if cv.full_name %}{{ cv.full_name }}{% else %}<span class="empty-state">Chưa cập nhật tên</span>{% endif %}
+                    </h1>
+                    <h2 class="text-[15px] text-gray-600 font-semibold" id="preview-major">
+                        {% if cv.target_major %}{{ cv.target_major }}{% else %}<span class="empty-state">Chưa có vị trí ứng tuyển</span>{% endif %}
+                    </h2>
+                </div>
+
+                <!-- Objective -->
+                <div class="mb-8" id="preview-objective-container">
+                    <h3 class="text-[12px] font-bold text-gray-900 uppercase tracking-widest border-b-2 border-[#0ea5e9] pb-1 mb-4 inline-block">
+                        Mục tiêu nghề nghiệp
+                    </h3>
+                    <p class="text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-line" id="preview-objective">
+                        {% if cv.objective %}
+                            {{ cv.objective }}
+                        {% else %}
+                            <span class="empty-state">Chưa có mục tiêu nghề nghiệp.</span>
+                        {% endif %}
+                    </p>
+                </div>
+
+                <!-- Experience -->
+                <div class="mb-8">
+                    <h3 class="text-[12px] font-bold text-gray-900 uppercase tracking-widest border-b-2 border-[#0ea5e9] pb-1 mb-5 inline-block">
+                        Kinh nghiệm làm việc
+                    </h3>
+                    <div id="preview-experience-container" class="space-y-6">
+                        <!-- JS inject -->
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- AI MODAL -->
+<div id="ai-modal" class="fixed inset-0 z-[100] flex items-center justify-center no-print hidden">
+    <!-- Backdrop -->
+    <div id="ai-modal-backdrop" class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+    
+    <!-- Modal Box -->
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 z-10 animate-[fadeInUp_0.2s_ease]">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-5">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#0ea5e9] to-[#6366f1] flex items-center justify-center text-white text-lg">✨</div>
+                <div>
+                    <h3 class="font-bold text-gray-900 text-[15px]">Gợi ý từ AI</h3>
+                    <p class="text-gray-500 text-xs">Chọn 1 trong 3 đoạn phù hợp nhất</p>
+                </div>
+            </div>
+            <button id="ai-modal-close" class="text-gray-400 hover:text-gray-700 transition-colors">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="ai-loading" class="py-10 flex flex-col items-center gap-4">
+            <div class="relative">
+                <div class="w-12 h-12 rounded-full border-4 border-[#e0f2fe] border-t-[#0ea5e9] animate-spin"></div>
+            </div>
+            <p class="text-gray-500 text-sm text-center">Đang tạo nội dung<br><span class="text-xs text-gray-400">Vui lòng chờ vài giây...</span></p>
+        </div>
+
+        <!-- Error State -->
+        <div id="ai-error" class="hidden py-6">
+            <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-4">
+                <i class="fas fa-exclamation-circle text-red-500 mt-0.5"></i>
+                <p id="ai-error-text" class="text-red-700 text-sm"></p>
+            </div>
+            <button id="ai-retry-btn" class="mt-4 w-full bg-[#0ea5e9] hover:bg-[#0284c7] text-white rounded py-2 text-sm font-semibold transition-colors">
+                <i class="fas fa-redo mr-1"></i> Thử lại
+            </button>
+        </div>
+
+        <!-- Suggestions List -->
+        <div id="ai-suggestions" class="hidden space-y-3">
+            <!-- JS inject -->
+        </div>
+
+        <!-- Footer hint -->
+        <p class="text-gray-400 text-[11px] text-center mt-4">Powered by Google Gemini &middot; Tối đa 5 lần/phút</p>
+    </div>
+</div>
+
+<!-- Initial Data for JS -->
+{{ cv.education|json_script:"init-education" }}
+{{ cv.experience|json_script:"init-experience" }}
+{{ cv.skills|json_script:"init-skills" }}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        // 1. Dữ liệu khởi tạo
+        let educationData = [];
+        let experienceData = [];
+        let skillsData = [];
+        
+        try {
+            const eduElem = document.getElementById('init-education');
+            if(eduElem) {
+                let parsed = JSON.parse(eduElem.textContent);
+                if(Array.isArray(parsed)) educationData = parsed;
+                else if(typeof parsed === 'string') {
+                    let inner = JSON.parse(parsed);
+                    if(Array.isArray(inner)) educationData = inner;
+                }
+            }
+            
+            const expElem = document.getElementById('init-experience');
+            if(expElem) {
+                let parsed = JSON.parse(expElem.textContent);
+                if(Array.isArray(parsed)) experienceData = parsed;
+                else if(typeof parsed === 'string') {
+                    let inner = JSON.parse(parsed);
+                    if(Array.isArray(inner)) experienceData = inner;
+                }
+            }
+            
+            const skillElem = document.getElementById('init-skills');
+            if(skillElem) {
+                let parsed = JSON.parse(skillElem.textContent);
+                if(Array.isArray(parsed)) skillsData = parsed;
+                else if(typeof parsed === 'string') {
+                    let inner = JSON.parse(parsed);
+                    if(Array.isArray(inner)) skillsData = inner;
+                }
+            }
+        } catch(e) { console.error("JSON parse error", e); }
+
+        const templates = {
+            education: { school: '', major: '', time: '', desc: '' },
+            experience: { company: '', position: '', time: '', desc: '' },
+            skills: { name: '', level: '80' }
+        };
+
+        // 2. Render Form Inputs
+        function renderFormSection(section, dataArray) {
+            const container = document.getElementById(`${section}-container`);
+            container.innerHTML = '';
+            
+            dataArray.forEach((item, index) => {
+                let html = '';
+                if(section === 'education') {
+                    html = `
+                    <div class="bg-white p-4 rounded shadow-sm border border-gray-200 relative group item-box transition-shadow hover:shadow-md" data-index="${index}">
+                        <div class="absolute w-3 h-3 bg-[#0ea5e9] rounded-full -left-[23px] top-5 border-2 border-white shadow"></div>
+                        <button type="button" class="absolute top-2 right-2 text-red-400 hover:text-red-600 hidden group-hover:block btn-remove transition-colors"><i class="fas fa-trash-alt"></i></button>
+                        
+                        <label class="text-[11px] font-bold text-gray-500 uppercase">Trường học / Cơ sở đào tạo</label>
+                        <input type="text" class="w-full border-b border-gray-300 bg-transparent px-1 py-1 text-sm font-bold text-gray-800 focus:border-[#0ea5e9] outline-none mb-3 form-bind" data-key="school" value="${item.school}" placeholder="VD: Đại học Bách Khoa">
+                        
+                        <label class="text-[11px] font-bold text-gray-500 uppercase">Chuyên ngành</label>
+                        <input type="text" class="w-full border-b border-gray-300 bg-transparent px-1 py-1 text-sm text-gray-800 focus:border-[#0ea5e9] outline-none mb-3 form-bind" data-key="major" value="${item.major}" placeholder="VD: Công nghệ thông tin">
+                        
+                        <label class="text-[11px] font-bold text-gray-500 uppercase">Thời gian</label>
+                        <input type="text" class="w-full border-b border-gray-300 bg-transparent px-1 py-1 text-xs text-gray-600 focus:border-[#0ea5e9] outline-none mb-3 form-bind" data-key="time" value="${item.time}" placeholder="VD: 2018 - 2022">
+                        
+                        <label class="text-[11px] font-bold text-gray-500 uppercase mb-1 block">Mô tả</label>
+                        <textarea class="w-full border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-800 focus:border-[#0ea5e9] outline-none rounded form-bind" data-key="desc" rows="2" placeholder="Điểm số, thành tích nổi bật...">${item.desc}</textarea>
+                    </div>`;
+                } else if(section === 'experience') {
+                    html = `
+                    <div class="bg-white p-4 rounded shadow-sm border border-gray-200 relative group item-box transition-shadow hover:shadow-md" data-index="${index}">
+                        <div class="absolute w-3 h-3 bg-[#0ea5e9] rounded-full -left-[23px] top-5 border-2 border-white shadow"></div>
+                        <button type="button" class="absolute top-2 right-2 text-red-400 hover:text-red-600 hidden group-hover:block btn-remove transition-colors"><i class="fas fa-trash-alt"></i></button>
+                        
+                        <label class="text-[11px] font-bold text-gray-500 uppercase">Tên công ty</label>
+                        <input type="text" class="w-full border-b border-gray-300 bg-transparent px-1 py-1 text-sm font-bold text-gray-800 focus:border-[#0ea5e9] outline-none mb-3 form-bind" data-key="company" value="${item.company}" placeholder="VD: Công ty TNHH Phần mềm">
+                        
+                        <label class="text-[11px] font-bold text-gray-500 uppercase">Vị trí</label>
+                        <input type="text" class="w-full border-b border-gray-300 bg-transparent px-1 py-1 text-sm text-gray-800 focus:border-[#0ea5e9] outline-none mb-3 form-bind" data-key="position" value="${item.position}" placeholder="VD: Backend Developer">
+                        
+                        <label class="text-[11px] font-bold text-gray-500 uppercase">Thời gian</label>
+                        <input type="text" class="w-full border-b border-gray-300 bg-transparent px-1 py-1 text-xs text-gray-600 focus:border-[#0ea5e9] outline-none mb-3 form-bind" data-key="time" value="${item.time}" placeholder="VD: 01/2021 - Hiện tại">
+                        
+                        <label class="text-[11px] font-bold text-gray-500 uppercase mb-1 block">Mô tả công việc</label>
+                        <div class="relative">
+                            <textarea class="w-full border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-800 focus:border-[#0ea5e9] outline-none rounded form-bind" data-key="desc" rows="3" placeholder="- Phát triển API...&#10;- Tối ưu database...">${item.desc}</textarea>
+                            <!-- Nút AI cho Experience -->
+                            <button type="button" 
+                                onclick="callAiAssistant('experience', ${index})"
+                                class="mt-1 flex items-center gap-1.5 text-[10px] font-bold text-[#6366f1] hover:text-[#4f46e5] bg-white border border-[#e0e7ff] px-2 py-1 rounded shadow-sm transition-all">
+                                <i class="fas fa-magic ai-sparkle"></i> AI viết mô tả chuyên nghiệp
+                            </button>
+                        </div>
+                    </div>`;
+                } else if(section === 'skills') {
+                    html = `
+                    <div class="bg-white p-3 rounded shadow-sm border border-gray-200 relative group item-box flex flex-col gap-2" data-index="${index}">
+                        <div class="flex items-center gap-2">
+                            <input type="text" class="flex-grow border-b border-gray-300 bg-transparent px-1 py-1 text-sm font-bold text-gray-800 focus:border-[#0ea5e9] outline-none form-bind" data-key="name" value="${item.name}" placeholder="VD: Python, Tiếng Anh">
+                            <button type="button" class="text-red-400 hover:text-red-600 btn-remove transition-colors px-2"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="text-[11px] font-bold text-gray-500 uppercase w-16">Mức độ:</span>
+                            <input type="range" class="flex-grow accent-[#0ea5e9] form-bind" data-key="level" min="10" max="100" step="10" value="${item.level || 80}">
+                            <span class="text-xs font-bold text-[#0ea5e9] w-8 text-right level-display">${item.level || 80}%</span>
+                        </div>
+                    </div>`;
+                }
+                container.insertAdjacentHTML('beforeend', html);
+            });
+
+            // Gắn sự kiện remove
+            container.querySelectorAll('.btn-remove').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const box = this.closest('.item-box');
+                    const idx = box.getAttribute('data-index');
+                    dataArray.splice(idx, 1);
+                    renderAll();
+                });
+            });
+
+            // Gắn sự kiện input để đồng bộ dataArray
+            container.querySelectorAll('.form-bind').forEach(input => {
+                input.addEventListener('input', function() {
+                    const box = this.closest('.item-box');
+                    const idx = box.getAttribute('data-index');
+                    const key = this.getAttribute('data-key');
+                    dataArray[idx][key] = this.value;
+                    
+                    // Update level display if it's a range input
+                    if (this.type === 'range') {
+                        box.querySelector('.level-display').textContent = this.value + '%';
+                    }
+
+                    renderPreviewSection(section, dataArray);
+                });
+            });
+        }
+
+        // 3. Render Preview
+        function renderPreviewSection(section, dataArray) {
+            const container = document.getElementById(`preview-${section}-container`);
+            container.innerHTML = '';
+            
+            if(dataArray.length === 0) {
+                container.innerHTML = `<div class="border border-dashed border-gray-500 text-gray-500 text-center py-3 rounded text-xs italic">Chưa có dữ liệu</div>`;
+                return;
+            }
+            
+            dataArray.forEach(item => {
+                let html = '';
+                if(section === 'education') {
+                    const isEmpty = !item.school && !item.major && !item.time && !item.desc;
+                    if (isEmpty) {
+                        html = `<div class="mb-4 empty-state">Chưa cập nhật</div>`;
+                    } else {
+                        html = `
+                        <div class="mb-4">
+                            ${item.school ? `<p class="font-bold text-white text-[13.5px] leading-snug">${item.school}</p>` : ''}
+                            ${item.major ? `<p class="text-[#0ea5e9] text-[12.5px] font-semibold mt-1">${item.major}</p>` : ''}
+                            ${item.time ? `<p class="text-gray-400 text-[11px] italic mt-1">${item.time}</p>` : ''}
+                            ${item.desc ? `<p class="text-gray-300 text-[12px] whitespace-pre-line mt-1.5 leading-relaxed">${item.desc}</p>` : ''}
+                        </div>`;
+                    }
+                } else if(section === 'experience') {
+                    const isEmpty = !item.company && !item.position && !item.time && !item.desc;
+                    if (isEmpty) {
+                        html = `
+                        <div class="mb-6 relative pl-5 border-l-2 border-[#475569]">
+                            <div class="absolute w-3 h-3 bg-[#1e293b] border-2 border-[#475569] rounded-full -left-[7px] top-1"></div>
+                            <p class="text-gray-500 text-[13px] italic">Chưa có kinh nghiệm làm việc.</p>
+                        </div>`;
+                    } else {
+                        html = `
+                        <div class="mb-6 relative pl-5 border-l-2 border-gray-200">
+                            <div class="absolute w-3 h-3 bg-white border-2 border-[#0ea5e9] rounded-full -left-[7px] top-1"></div>
+                            ${item.position ? `<p class="font-extrabold text-gray-900 text-[15px]">${item.position}</p>` : ''}
+                            ${item.company ? `<p class="text-[#0ea5e9] text-[13.5px] font-bold mt-1 tracking-wide">${item.company}</p>` : ''}
+                            ${item.time ? `<p class="text-gray-500 text-[11.5px] italic mt-1 mb-2.5 flex items-center gap-1"><i class="far fa-calendar-alt"></i> ${item.time}</p>` : ''}
+                            ${item.desc ? `<p class="text-gray-800 text-[13px] whitespace-pre-line leading-relaxed">${item.desc}</p>` : ''}
+                        </div>`;
+                    }
+                } else if(section === 'skills') {
+                    const isEmpty = !item.name;
+                    if (isEmpty) {
+                        html = `<div class="empty-state mb-3">Chưa cập nhật</div>`;
+                    } else {
+                        const level = item.level || 80;
+                        html = `
+                        <div class="mb-3">
+                            <div class="flex justify-between mb-1">
+                                <span class="font-bold text-white text-[13px]">${item.name}</span>
+                                <span class="text-[#0ea5e9] text-[11px] font-semibold">${level}%</span>
+                            </div>
+                            <div class="w-full bg-[#334155] rounded-full h-1.5">
+                                <div class="bg-[#0ea5e9] h-1.5 rounded-full transition-all duration-300" style="width: ${level}%"></div>
+                            </div>
+                        </div>`;
+                    }
+                }
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // Helper render all
+        function renderAll() {
+            renderFormSection('education', educationData);
+            renderFormSection('experience', experienceData);
+            renderFormSection('skills', skillsData);
+            
+            renderPreviewSection('education', educationData);
+            renderPreviewSection('experience', experienceData);
+            renderPreviewSection('skills', skillsData);
+        }
+
+        // Khởi tạo ban đầu
+        if(educationData.length === 0) educationData.push({...templates.education});
+        if(experienceData.length === 0) experienceData.push({...templates.experience});
+        if(skillsData.length === 0) skillsData.push({...templates.skills});
+        
+        renderAll();
+
+        // 4. Sự kiện thêm mới item
+        document.querySelectorAll('.btn-add-item').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const section = this.getAttribute('data-section');
+                if(section === 'education') educationData.push({...templates.education});
+                else if(section === 'experience') experienceData.push({...templates.experience});
+                else if(section === 'skills') skillsData.push({...templates.skills});
+                renderAll();
+                
+                // Cuộn xuống cuối
+                setTimeout(() => {
+                    const container = document.getElementById(`${section}-container`);
+                    container.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 50);
+            });
+        });
+
+        // 5. Đồng bộ input tĩnh (Thông tin chung) -> Preview
+        document.querySelectorAll('.cv-input').forEach(input => {
+            const updatePreview = function() {
+                const targetId = this.getAttribute('data-target');
+                const targetEl = document.getElementById(targetId);
+                
+                // Xử lý ẩn/hiện các dòng liên hệ (phone, email, address, github, linkedin)
+                const rowId = 'row-' + this.name;
+                const rowEl = document.getElementById(rowId);
+                
+                if (this.value.trim() !== '') {
+                    if (targetEl) {
+                        // Họ và tên: in hoa theo style CSS
+                        targetEl.textContent = this.value;
+                        // Xóa empty state nếu có
+                        targetEl.querySelectorAll('.empty-state').forEach(el => el.remove());
+                        // Tên: text-gray-900, Vị trí: text-gray-600
+                        if (this.name === 'full_name') {
+                            targetEl.classList.add('text-gray-900');
+                        } else if (this.name === 'target_major') {
+                            targetEl.style.color = '';
+                            targetEl.classList.add('text-gray-700');
+                        } else if (this.name === 'objective') {
+                            targetEl.classList.add('text-gray-800');
+                            targetEl.classList.remove('text-gray-400', 'italic');
+                        }
+                    }
+                    if (rowEl) rowEl.classList.remove('hidden');
+                } else {
+                    const emptyMessages = {
+                        'full_name': 'Chưa cập nhật tên',
+                        'target_major': 'Chưa có vị trí ứng tuyển',
+                        'objective': 'Chưa có mục tiêu nghề nghiệp.'
+                    };
+                    if (targetEl) {
+                        const msg = emptyMessages[this.name];
+                        if (msg) {
+                            targetEl.innerHTML = `<span class="empty-state">${msg}</span>`;
+                        } else {
+                            targetEl.textContent = '';
+                        }
+                    }
+                    if (rowEl) rowEl.classList.add('hidden');
+                }
+            };
+            
+            input.addEventListener('input', updatePreview);
+            updatePreview.call(input);
+        });
+
+        // 6. Xử lý Preview Avatar
+        const avatarInput = document.getElementById('avatar-input');
+        if (avatarInput) {
+            avatarInput.addEventListener('change', function(e) {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const formImg = document.getElementById('avatar-preview-form');
+                        const cvImg = document.getElementById('avatar-preview-cv');
+                        const placeholder = document.getElementById('avatar-preview-cv-placeholder');
+                        
+                        formImg.src = e.target.result;
+                        cvImg.src = e.target.result;
+                        cvImg.classList.remove('hidden');
+                        if (placeholder) placeholder.classList.add('hidden');
+                    }
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+
+        // 7. Xử lý Save AJAX
+        const form = document.getElementById('cv-form');
+        const btnSave = document.getElementById('btn-save');
+        const saveText = document.getElementById('save-text');
+        const saveSpinner = document.getElementById('save-spinner');
+        const toast = document.getElementById('toast-success');
+
+        function showToast() {
+            toast.classList.remove('translate-y-[-150%]', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-150%]', 'opacity-0');
+            }, 3000);
+        }
+
+        btnSave.addEventListener('click', function() {
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // UI Loading
+            btnSave.disabled = true;
+            saveText.textContent = "Đang lưu...";
+            saveSpinner.classList.remove('hidden');
+
+            // Lọc dữ liệu rỗng trước khi lưu (Xóa các block hoàn toàn rỗng)
+            const cleanEducation = educationData.filter(item => item.school || item.major || item.time || item.desc);
+            const cleanExperience = experienceData.filter(item => item.company || item.position || item.time || item.desc);
+            const cleanSkills = skillsData.filter(item => item.name);
+
+            // Gán data vào hidden inputs
+            document.getElementById('hidden_education').value = JSON.stringify(cleanEducation);
+            document.getElementById('hidden_experience').value = JSON.stringify(cleanExperience);
+            document.getElementById('hidden_skills').value = JSON.stringify(cleanSkills);
+            
+            const formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    showToast();
+                    if (form.action.endsWith('/create/')) {
+                        form.action = `/cv/${data.cv_id}/edit/`;
+                        window.history.pushState({}, '', form.action);
+                    }
+                } else {
+                    alert("Có lỗi xảy ra: " + (data.message || 'Không rõ nguyên nhân'));
+                }
+            })
+            .catch(error => {
+                console.error("Error saving CV:", error);
+                alert("Lỗi kết nối. Vui lòng thử lại!");
+            })
+            .finally(() => {
+                // UI Restore
+                btnSave.disabled = false;
+                saveText.textContent = "Lưu CV";
+                saveSpinner.classList.add('hidden');
+            });
+        });
+
+        function updateItem(section, index, key, value) {
+            if (section === 'education') educationData[index][key] = value;
+            else if (section === 'experience') experienceData[index][key] = value;
+            else if (section === 'skills') skillsData[index][key] = value;
+            renderAll();
+        }
+
+        // ============================================================
+        // 8. TRỢ LÝ AI ĐA NĂNG (MỚI)
+        // ============================================================
+        const aiModal = document.getElementById('ai-modal');
+        const aiLoading = document.getElementById('ai-loading');
+        const aiError = document.getElementById('ai-error');
+        const aiErrorText = document.getElementById('ai-error-text');
+        const aiSuggestions = document.getElementById('ai-suggestions');
+
+        let lastAiParams = null;
+        window.callAiAssistant = function(taskType, index = null) {
+            lastAiParams = { taskType, index };
+            const position = document.querySelector('input[name="target_major"]').value.trim();
+            if (!position) {
+                alert("Vui lòng nhập 'Vị trí ứng tuyển' ở đầu form để AI có cơ sở gợi ý!");
+                return;
+            }
+
+            let context = "";
+            if (taskType === 'objective') {
+                context = skillsData.map(s => s.name).join(', ');
+            } else if (taskType === 'experience' && index !== null) {
+                context = experienceData[index].position || position;
+            }
+
+            // UI State
+            aiModal.classList.remove('hidden');
+            aiLoading.classList.remove('hidden');
+            aiError.classList.add('hidden');
+            aiSuggestions.classList.add('hidden');
+            aiSuggestions.innerHTML = '';
+
+            fetch('{% url "ai_assistant" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({ task_type: taskType, position: position, context: context })
+            })
+            .then(res => res.json())
+            .then(data => {
+                aiLoading.classList.add('hidden');
+                if (data.status === 'success' && data.suggestions) {
+                    aiSuggestions.classList.remove('hidden');
+                    
+                    data.suggestions.forEach((text, idx) => {
+                        const card = document.createElement('div');
+                        card.className = 'border border-gray-100 rounded-xl p-4 hover:border-indigo-400 hover:bg-indigo-50/30 transition-all cursor-pointer group mb-3 last:mb-0';
+                        card.innerHTML = `
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-[10px] font-bold shrink-0">${idx+1}</div>
+                                <p class="text-gray-700 text-sm leading-relaxed">${text}</p>
+                            </div>
+                            <button class="mt-3 w-full py-2 rounded-lg bg-indigo-600 text-white text-xs font-bold shadow-lg shadow-indigo-200 opacity-0 group-hover:opacity-100 transition-all">
+                                <i class="fas fa-plus mr-1"></i> Sử dụng nội dung này
+                            </button>
+                        `;
+                        card.onclick = () => applyAiSuggestion(taskType, text, index);
+                        aiSuggestions.appendChild(card);
+                    });
+                } else {
+                    aiError.classList.remove('hidden');
+                    aiErrorText.textContent = data.message || "Không thể kết nối với AI.";
+                }
+            })
+            .catch(err => {
+                aiLoading.classList.add('hidden');
+                aiError.classList.remove('hidden');
+                aiErrorText.textContent = "Lỗi mạng. Vui lòng thử lại.";
+            });
+        };
+
+        function applyAiSuggestion(taskType, text, index) {
+            if (taskType === 'objective') {
+                const el = document.querySelector('textarea[name="objective"]');
+                el.value = text;
+                el.dispatchEvent(new Event('input'));
+            } else if (taskType === 'experience') {
+                updateItem('experience', index, 'desc', text);
+                // Trigger preview sync
+            } else if (taskType === 'skills') {
+                // Thêm skill mới từ gợi ý
+                if (!skillsData.some(s => s.name === text)) {
+                    skillsData.push({ name: text, level: 80 });
+                    renderAll();
+                }
+            }
+            aiModal.classList.add('hidden');
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function closeAiModal() {
+            aiModal.classList.add('hidden');
+        }
+
+        // Đóng modal
+        document.getElementById('ai-modal-close').addEventListener('click', closeAiModal);
+        document.getElementById('ai-modal-backdrop').addEventListener('click', closeAiModal);
+
+        // Thử lại khi lỗi
+        document.getElementById('ai-retry-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (lastAiParams) callAiAssistant(lastAiParams.taskType, lastAiParams.index);
+        });
+
+        // Đóng modal bằng phím Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeAiModal();
+        });
+
+    });
+</script>
+{% endblock %}
+

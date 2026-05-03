@@ -3,7 +3,7 @@
 <html lang="vi">
 
 <head>
-    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}JobHub | Việc làm & Tuyển dụng{% endblock %}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&display=swap" rel="stylesheet">
@@ -18,8 +18,10 @@
         style="background: #ffffff !important; box-shadow: 0 2px 10px rgba(0,0,0,0.05) !important; border-bottom: 1px solid #eee !important;">
         <div class="container header-inner">
             <div class="logo">
-                <h1 style="color: #0a2540; font-weight: 800; margin: 0;">JobPortal<span
-                        style="color: #00b14f;">PTIT</span></h1>
+                <a href="{% url 'home' %}" style="text-decoration: none;">
+                    <h1 style="color: #0a2540; font-weight: 800; margin: 0;">JobPortal<span
+                            style="color: #00b14f;">PTIT</span></h1>
+                </a>
             </div>
 
             <div class="nav-links" style="display: flex; align-items: center;">
@@ -29,6 +31,17 @@
                     style="color: #2d4356; font-weight: 500; margin-left: 30px; text-decoration: none;">Công ty</a>
                 <a href="{% url 'profile' %}"
                     style="color: #2d4356; font-weight: 500; margin-left: 30px; text-decoration: none;">Hồ sơ & CV</a>
+                <a href="{% url 'cv_builder' %}"
+                    style="color: #00b14f; font-weight: 700; margin-left: 30px; text-decoration: none; position: relative; display: flex; align-items: center; gap: 5px;">
+                    <i class="fas fa-magic"></i> Tạo CV
+                    <span style="background: linear-gradient(135deg, #a855f7, #6366f1); color: white; font-size: 9px; padding: 2px 6px; border-radius: 10px; font-weight: 900; box-shadow: 0 2px 4px rgba(99,102,241,0.4); border: 1px solid white; animation: float 2s ease-in-out infinite;">AI ✨</span>
+                </a>
+                <style>
+                    @keyframes float {
+                        0%, 100% { transform: translateY(0); }
+                        50% { transform: translateY(-3px); }
+                    }
+                </style>
 
                 {% if user.is_authenticated %}
                 <a href="{% url 'dashboard' %}"
@@ -177,6 +190,163 @@
             box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
         }
     </style>
+
+<!-- Modal Ứng Tuyển Toàn Cục -->
+{% if user.is_authenticated and user.is_candidate %}
+<div class="modal fade" id="globalApplyJobModal" tabindex="-1" aria-labelledby="globalApplyJobModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0" style="border-radius: 16px;">
+      <form id="globalApplyForm" method="POST" action="" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold" id="globalApplyJobModalLabel" style="color: #0a2540;">Ứng tuyển: <span id="globalApplyJobTitle"></span></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body py-4">
+          <h6 class="fw-bold mb-3" style="color: #475569;">Chọn CV để ứng tuyển</h6>
+          
+          <!-- Lựa chọn 1: CV Gốc -->
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="radio" name="cv_option" id="global_cv_option_default" value="default" {% if user.default_cv %}checked{% endif %}>
+            <label class="form-check-label fw-bold" for="global_cv_option_default" style="color: #1e293b; cursor: pointer;">
+              Sử dụng CV Gốc đã lưu
+            </label>
+            {% if user.default_cv %}
+            <div id="global_default_cv_box" class="mt-2 p-2 rounded" style="background: #f1f5f9; border: 1px solid #e2e8f0; transition: opacity 0.3s;">
+                <i class="fas fa-file-alt text-primary me-2"></i><span class="fw-bold" style="font-size: 0.9rem;">{{ user.cv_filename|default:user.default_cv.name }}</span>
+            </div>
+            {% else %}
+            <div class="mt-2 text-danger small">
+                <i class="fas fa-exclamation-triangle"></i> Bạn chưa lưu CV Gốc. Vui lòng tải lên CV mới!
+            </div>
+            <script>document.getElementById('global_cv_option_default').disabled = true;</script>
+            {% endif %}
+          </div>
+          
+          <!-- Lựa chọn 2: Tải CV mới -->
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="radio" name="cv_option" id="global_cv_option_new" value="new" {% if not user.default_cv and not user.cvs.exists %}checked{% endif %}>
+            <label class="form-check-label fw-bold" for="global_cv_option_new" style="color: #1e293b; cursor: pointer;">
+              Tải lên CV mới cho vị trí này
+            </label>
+            
+            <div id="global_new_cv_upload_box" class="mt-2 {% if user.default_cv or user.cvs.exists %}d-none{% endif %}">
+                <input type="file" name="new_cv" id="global_id_new_cv" class="d-none" accept=".pdf,.docx">
+                <label for="global_id_new_cv" class="w-100 p-3 text-center rounded cursor-pointer" style="border: 2px dashed #cbd5e1; background: #fff; cursor: pointer; color: #64748b; font-weight: 500; transition: all 0.3s;" onmouseover="this.style.borderColor='#00b14f'; this.style.color='#00b14f'" onmouseout="this.style.borderColor='#cbd5e1'; this.style.color='#64748b'">
+                    <i class="fas fa-cloud-upload-alt me-2 fs-5"></i> <span id="global_new_cv_filename_display">Nhấn để tải CV lên (PDF/DOCX)</span>
+                </label>
+            </div>
+          </div>
+          
+          <!-- Lựa chọn 3: Sử dụng CV trực tuyến -->
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="radio" name="cv_option" id="global_cv_option_online" value="online" {% if user.cvs.exists and not user.default_cv %}checked{% endif %}>
+            <label class="form-check-label fw-bold" for="global_cv_option_online" style="color: #1e293b; cursor: pointer;">
+              Sử dụng CV trực tuyến (Hệ thống TopCV)
+            </label>
+            
+            <div id="global_online_cv_box" class="mt-2 {% if not user.cvs.exists or user.default_cv %}d-none{% endif %}">
+                {% if user.cvs.exists %}
+                <select name="online_cv_id" id="global_online_cv_id" class="form-select border-gray-300" style="border-radius: 8px;">
+                    <option value="" disabled selected>-- Chọn CV trực tuyến của bạn --</option>
+                    {% for cv in user.cvs.all %}
+                        <option value="{{ cv.id }}">{{ cv.title }} ({{ cv.updated_at|date:"d/m/Y" }})</option>
+                    {% endfor %}
+                </select>
+                {% else %}
+                <div class="text-danger small">
+                    <i class="fas fa-exclamation-triangle"></i> Bạn chưa tạo CV trực tuyến nào. <a href="{% url 'cv_builder' %}" class="text-blue-600">Tạo ngay</a>
+                </div>
+                <script>document.getElementById('global_cv_option_online').disabled = true;</script>
+                {% endif %}
+            </div>
+          </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal" style="border-radius: 8px;">Đóng</button>
+          <button type="submit" class="btn btn-primary fw-bold px-4" style="background: #00b14f; border: none; border-radius: 8px;">Xác nhận nộp đơn</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const radioDefault = document.getElementById('global_cv_option_default');
+    const radioNew = document.getElementById('global_cv_option_new');
+    const radioOnline = document.getElementById('global_cv_option_online');
+    const uploadBox = document.getElementById('global_new_cv_upload_box');
+    const onlineBox = document.getElementById('global_online_cv_box');
+    const cvInput = document.getElementById('global_id_new_cv');
+    const cvDisplay = document.getElementById('global_new_cv_filename_display');
+    const applyModal = document.getElementById('globalApplyJobModal');
+    const defaultBox = document.getElementById('global_default_cv_box');
+
+    function updateBoxVisibility() {
+        if(radioDefault && radioDefault.checked) {
+            if(uploadBox) uploadBox.classList.add('d-none');
+            if(onlineBox) onlineBox.classList.add('d-none');
+            if(defaultBox) defaultBox.style.opacity = '1';
+        } else if(radioNew && radioNew.checked) {
+            if(uploadBox) uploadBox.classList.remove('d-none');
+            if(onlineBox) onlineBox.classList.add('d-none');
+            if(defaultBox) defaultBox.style.opacity = '0.4';
+        } else if(radioOnline && radioOnline.checked) {
+            if(uploadBox) uploadBox.classList.add('d-none');
+            if(onlineBox) onlineBox.classList.remove('d-none');
+            if(defaultBox) defaultBox.style.opacity = '0.4';
+        }
+    }
+
+    if(radioDefault) radioDefault.addEventListener('change', updateBoxVisibility);
+    if(radioNew) radioNew.addEventListener('change', updateBoxVisibility);
+    if(radioOnline) radioOnline.addEventListener('change', updateBoxVisibility);
+    
+    // Khởi tạo trạng thái ban đầu
+    updateBoxVisibility();
+
+    if(cvInput && cvDisplay) {
+        cvInput.addEventListener('change', function() {
+            if(this.files && this.files.length > 0) {
+                cvDisplay.textContent = "Đã chọn: " + this.files[0].name;
+                cvDisplay.parentElement.style.borderColor = "#00b14f";
+                cvDisplay.parentElement.style.color = "#00b14f";
+            }
+        });
+    }
+
+    if(applyModal) {
+        applyModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const jobId = button.getAttribute('data-job-id');
+            const jobTitle = button.getAttribute('data-job-title');
+            
+            document.getElementById('globalApplyJobTitle').textContent = jobTitle;
+            document.getElementById('globalApplyForm').action = '/apply/' + jobId + '/';
+        });
+
+        document.getElementById('globalApplyForm').addEventListener('submit', function(e) {
+            if(radioNew && radioNew.checked) {
+                if(!cvInput.files || cvInput.files.length === 0) {
+                    e.preventDefault();
+                    document.getElementById('global_new_cv_upload_box').style.animation = 'shake 0.5s';
+                    setTimeout(() => document.getElementById('global_new_cv_upload_box').style.animation = '', 500);
+                    alert("Vui lòng chọn file CV (PDF/DOCX) trước khi ứng tuyển.");
+                }
+            } else if(radioOnline && radioOnline.checked) {
+                const onlineSelect = document.getElementById('global_online_cv_id');
+                if(!onlineSelect.value) {
+                    e.preventDefault();
+                    document.getElementById('global_online_cv_box').style.animation = 'shake 0.5s';
+                    setTimeout(() => document.getElementById('global_online_cv_box').style.animation = '', 500);
+                    alert("Vui lòng chọn một CV trực tuyến.");
+                }
+            }
+        });
+    }
+});
+</script>
+{% endif %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/main.js' %}"></script>

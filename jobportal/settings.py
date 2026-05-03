@@ -11,9 +11,17 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load biến môi trường từ file .env (bảo mật API key)
+load_dotenv(BASE_DIR / '.env')
+
+# Gemini AI API Key - đọc từ file .env, không hardcode
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
 
 
 # Quick-start development settings - unsuitable for production
@@ -26,10 +34,13 @@ SECRET_KEY = 'django-insecure-@)_ro$fzyzsubpd*6k3ms2_#@^l)i9p9%q=(qw%9ktbhd^$nnc
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+DEFAULT_CHARSET = 'utf-8'
 
 # Cho phép Ngrok vượt qua hệ thống bảo mật chống giả mạo của Django
 CSRF_TRUSTED_ORIGINS = [
     'https://basiliscine-nonconclusive-lillia.ngrok-free.dev',
+    'https://*.lhr.life',
+    'https://*.serveousercontent.com',
 ]
 
 
@@ -54,6 +65,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.ForceUTF8Middleware',
 ]
 
 ROOT_URLCONF = 'jobportal.urls'

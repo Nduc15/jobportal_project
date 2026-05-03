@@ -33,6 +33,17 @@ urlpatterns = [
 
     # Hồ sơ và CV
     path('profile/', views.profile_view, name='profile'),
+    path('profile/delete-cv/', views.delete_cv, name='delete_cv'),
+    
+    # Quản lý CV trực tuyến (CV Builder)
+    path('cv/', views.cv_list, name='cv_list'),
+    path('cv/create/', views.cv_builder, name='cv_builder'),
+    path('cv/<int:cv_id>/edit/', views.cv_builder, name='cv_builder_edit'),
+    path('cv/<int:cv_id>/delete/', views.cv_delete, name='cv_delete'),
+    path('cv/<int:cv_id>/view/', views.cv_view, name='cv_view'),
+    
+    # AI API: Trợ lý AI đa năng
+    path('api/ai-assistant/', views.ai_assistant, name='ai_assistant'),
     
     # Danh sách Công ty
     path('companies/', views.company_list, name='company_list'),
@@ -55,6 +66,10 @@ urlpatterns = [
 
     # Cập nhật trạng thái đơn ứng tuyển (Chấp nhận / Từ chối)
     path('dashboard/employer/application/<int:app_id>/update/', views.update_application_status, name='update_application_status'),
+
+    # Tính lại điểm AI Matching
+    path('dashboard/employer/application/<int:app_id>/match/', views.recalculate_match, name='recalculate_match'),
+    path('dashboard/employer/application/<int:app_id>/interview/', views.schedule_interview, name='schedule_interview'),
 
     # Quản lý tin tuyển dụng (NTD)
     path('jobs/create/', views.create_job, name='create_job'),

@@ -52,7 +52,7 @@
                         </span>
                         {% endif %}
                         <span class="d-flex align-items-center gap-2 px-3 py-2" style="background: #eff6ff; color: #1d4ed8; border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
-                            <i class="fas fa-calendar-alt"></i> Cập nhật: {{ job.updated_at|naturaltime }}
+                            <i class="fas fa-calendar-alt"></i> Cập nhật: {{ job.time_ago_vn }}
                         </span>
                     </div>
 
@@ -178,13 +178,13 @@
                                     </button>
                                     <p class="text-center text-muted small"><i class="fas fa-info-circle"></i> Bạn đã nộp CV cho công việc này.</p>
                                 {% else %}
-                                    <form method="POST" action="{% url 'apply_job' job.id %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-lg w-100 mb-3 btn-apply-now">
-                                            <i class="fas fa-paper-plane me-2"></i> Ứng tuyển ngay
-                                        </button>
-                                    </form>
-                                    <p class="text-center text-muted small">Nộp đơn nhanh bằng CV gốc của bạn</p>
+                                    <button type="button" class="btn btn-lg w-100 mb-3 btn-apply-now" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#globalApplyJobModal"
+                                            data-job-id="{{ job.id }}" 
+                                            data-job-title="{{ job.title }}">
+                                        <i class="fas fa-paper-plane me-2"></i> Ứng tuyển ngay
+                                    </button>
                                 {% endif %}
                             {% elif user.is_employer or user.is_superuser %}
                                 <div class="alert alert-info border-0 mb-3" style="background: #eff6ff; color: #1d4ed8; border-radius: 12px; font-size: 0.85rem;">
@@ -228,6 +228,40 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Việc làm tương tự (Recommendation) -->
+            <div class="card border-0 shadow-sm mt-4" style="border-radius: 16px;">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3" style="color: #0a2540;"><i class="fas fa-briefcase me-2"></i>Việc làm tương tự</h6>
+                    <div class="d-flex flex-column gap-3">
+                        {% for item in similar_jobs %}
+                        <div class="similar-job-item p-3 rounded" style="border: 1px solid #e2e8f0; transition: all 0.2s;">
+                            <a href="{% url 'job_detail' item.id %}" class="text-decoration-none d-block">
+                                <h6 class="fw-bold mb-1" style="color: #0a2540; font-size: 0.95rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal;">{{ item.title }}</h6>
+                                <p class="mb-2 text-muted text-truncate" style="font-size: 0.85rem;">{{ item.employer.company_name|default:item.employer.username }}</p>
+                                <div class="d-flex justify-content-between align-items-center mt-2 gap-2">
+                                    <span class="flex-shrink-0" style="color: #10b981; font-weight: 600; font-size: 0.85rem;">
+                                        {% if not item.salary_min and not item.salary_max or item.salary_min == 0 and item.salary_max == 0 %}
+                                            Thỏa thuận
+                                        {% else %}
+                                            {{ item.salary_min|floatformat:0 }} - {{ item.salary_max|floatformat:0 }} Tr
+                                        {% endif %}
+                                    </span>
+                                    <span class="text-muted text-end" style="font-size: 0.8rem;" title="{{ item.location }}">
+                                        <i class="fas fa-map-marker-alt"></i> {{ item.location|truncatechars:20 }}
+                                    </span>
+                                </div>
+                            </a>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-3">
+                            <p class="text-muted small mb-0">Chưa có công việc tương tự.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>

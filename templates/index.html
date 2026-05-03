@@ -204,7 +204,50 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 </form>
-<!-- ===== END HERO SECTION ===== -->
+<!-- ===== AI PROMOTION BANNER ===== -->
+<div class="container mt-5 mb-5">
+    <div class="position-relative overflow-hidden p-4 p-md-5 rounded-4 shadow-lg" 
+         style="background: linear-gradient(110deg, #1e1b4b 0%, #312e81 100%); border: 1px solid rgba(255,255,255,0.1);">
+        <!-- Trang trí -->
+        <div class="position-absolute top-0 end-0 p-3 opacity-20 d-none d-md-block" style="font-size: 5rem; transform: rotate(15deg);">✨</div>
+        <div class="position-absolute bottom-0 end-0 p-4 opacity-10" style="font-size: 6rem; pointer-events: none;">🤖</div>
+        
+        <div class="row align-items-center position-relative" style="z-index: 2;">
+            <div class="col-lg-7 text-white">
+                <h2 class="display-6 fw-bold mb-3">Tạo CV đột phá với <span class="text-info" style="color: #38bdf8 !important;">Trợ lý AI Gemini</span></h2>
+                <p class="lead mb-4 opacity-75" style="font-size: 1rem; max-width: 90%;">Đừng để việc viết CV làm khó bạn. Trợ lý AI của chúng tôi sẽ giúp bạn viết mục tiêu nghề nghiệp, mô tả kinh nghiệm và gợi ý kỹ năng chuyên nghiệp chỉ trong tích tắc.</p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{% url 'cv_builder' %}" class="btn btn-lg px-5 py-3 fw-bold shadow-sm" 
+                       style="background: #ffffff; color: #1e1b4b; border-radius: 12px; font-size: 0.95rem;">
+                       Trải nghiệm ngay <i class="fas fa-magic ms-2"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block">
+                <div class="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-3 text-white" style="transform: perspective(1000px) rotateY(-15deg);">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="w-2 h-2 rounded-circle bg-danger"></div>
+                        <div class="w-2 h-2 rounded-circle bg-warning"></div>
+                        <div class="w-2 h-2 rounded-circle bg-success"></div>
+                    </div>
+                    <div class="space-y-2 font-monospace" style="font-size: 0.8rem;">
+                        <p class="text-info mb-1">// AI is generating objective...</p>
+                        <p class="opacity-70">"Với 3 năm kinh nghiệm trong lập trình Python, tôi khao khát được cống hiến..."</p>
+                        <div class="mt-3 pt-3 border-top border-white/10">
+                            <p class="text-warning mb-1">// AI Suggested Skills:</p>
+                            <div class="d-flex gap-2">
+                                <span class="badge border border-white/30 rounded-pill">Django</span>
+                                <span class="badge border border-white/30 rounded-pill">React</span>
+                                <span class="badge border border-white/30 rounded-pill">Gemini AI</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ===== END AI PROMOTION BANNER ===== -->
 
 <!-- ===== JOB LISTING + SIDEBAR ===== -->
 <div class="container-fluid px-lg-5 mt-4">
@@ -333,7 +376,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         Thỏa thuận
                                     {% endif %}
                                 </span>
-                                <span style="font-size: 13px; color: #475569; font-weight: 500;"><i class="far fa-clock me-1"></i> {{ job.updated_at|naturaltime }}</span>
+                                <span style="font-size: 13px; color: #475569; font-weight: 500;"><i class="far fa-clock me-1"></i> {{ job.time_ago_vn }}</span>
                             </div>
                         </div>
 
@@ -352,13 +395,27 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div></div>
                             {% endif %}
 
-                            <form method="POST" action="{% url 'apply_job' job.id %}" style="margin: 0;" onclick="event.stopPropagation();">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-apply-outline"
-                                        onclick="return confirm('Nộp đơn bằng CV gốc đã tải lên trong Profile?');">
+                            <!-- Nút ứng tuyển dùng global Modal -->
+                            {% if user.is_authenticated and user.is_candidate %}
+                                {% if job.id in applied_job_ids %}
+                                    <button class="btn btn-sm btn-success disabled" style="opacity: 0.8;">
+                                        <i class="fas fa-check-circle me-1"></i> Đã ứng tuyển
+                                    </button>
+                                {% else %}
+                                    <button type="button" class="btn btn-apply-outline"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#globalApplyJobModal"
+                                            data-job-id="{{ job.id }}" 
+                                            data-job-title="{{ job.title }}"
+                                            onclick="event.stopPropagation();">
+                                        Ứng tuyển <i class="fas fa-arrow-right ms-1" style="font-size: 12px;"></i>
+                                    </button>
+                                {% endif %}
+                            {% elif not user.is_authenticated %}
+                                <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-apply-outline" onclick="event.stopPropagation();">
                                     Ứng tuyển <i class="fas fa-arrow-right ms-1" style="font-size: 12px;"></i>
-                                </button>
-                            </form>
+                                </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

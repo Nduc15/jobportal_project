@@ -70,20 +70,35 @@
                             <h6 class="fw-bold"><i class="fas fa-file-alt text-primary me-2"></i> CV Gốc của bạn</h6>
                             <p class="small text-muted mb-3">Tải lên một CV chuẩn để sử dụng nhanh cho các đợt ứng tuyển (Chỉ nhận file PDF/DOCX, tối đa 5MB).</p>
                             
-                            {% if user.default_cv %}
-                            <div class="mb-3 d-flex align-items-center">
-                                <i class="fas fa-check-circle text-success me-2"></i> 
-                                <span>Bạn đã tải lên CV: <a href="{{ user.default_cv.url }}" target="_blank" class="fw-bold text-decoration-none">{{ user.default_cv.name|truncatechars:30 }}</a></span>
+                            <div id="cv-display-container">
+                                {% if user.default_cv %}
+                                <div class="mb-3 d-flex align-items-center gap-2" id="cv-item">
+                                    <span class="badge bg-secondary px-3 py-2 shadow-sm d-flex align-items-center" style="font-size: 0.9rem; font-weight: 500; border-radius: 8px;">
+                                        <i class="fas fa-file-alt me-2" style="font-size: 1.1rem;"></i>
+                                        <a href="{{ user.default_cv.url }}" target="_blank" class="text-white text-decoration-none">{{ user.cv_filename }}</a>
+                                    </span>
+                                    <button type="button" class="btn btn-sm btn-outline-danger shadow-sm" onclick="deleteCV()" style="border-radius: 8px; padding: 6px 12px;">
+                                        <i class="fas fa-trash-alt me-1"></i> Xóa CV
+                                    </button>
+                                </div>
+                                {% endif %}
                             </div>
-                            {% endif %}
                             
-                            {{ form.default_cv }}
+                            <!-- Custom Upload Button -->
+                            <div class="d-none">{{ form.default_cv }}</div>
+                            <label for="id_default_cv" class="w-100 p-3 text-center rounded mt-2" style="border: 2px dashed #cbd5e1; background: #fff; cursor: pointer; color: #64748b; font-weight: 500; transition: all 0.3s;" onmouseover="this.style.borderColor='#00b14f'; this.style.color='#00b14f'" onmouseout="this.style.borderColor='#cbd5e1'; this.style.color='#64748b'">
+                                <i class="fas fa-cloud-upload-alt me-2 fs-5"></i> <span id="cv_filename_display">Nhấn để tải CV lên</span>
+                            </label>
                         </div>
                     </div>
                     {% endif %}
 
                     <!-- Giới thiệu Công ty (Chỉ hiện cho Nhà tuyển dụng) -->
                     {% if user.is_employer %}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Địa chỉ Công ty</label>
+                        {{ form.address }}
+                    </div>
                     <div class="mb-4">
                         <label class="form-label fw-bold">Giới thiệu về Công ty</label>
                         {{ form.company_description }}
@@ -118,7 +133,6 @@
                         if(imagePreview) {
                             imagePreview.src = event.target.result;
                         } else if (letterPreview) {
-                            // Nếu lúc trước chưa có ảnh (dùng chữ cái đầu), ta tạo luôn img element đè lên
                             letterPreview.innerHTML = `<img src="${event.target.result}" class="rounded-circle shadow-sm" style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #f8f9fa;">`;
                             letterPreview.style.background = 'transparent';
                             letterPreview.style.border = 'none';
@@ -128,6 +142,43 @@
                 }
             });
         }
+
+        // JS Logic: Hiển thị tên file CV lúc chọn tệp
+        const cvInput = document.getElementById("id_default_cv");
+        if(cvInput) {
+            cvInput.addEventListener("change", function() {
+                if(this.files && this.files.length > 0) {
+                    document.getElementById("cv_filename_display").textContent = "Đã chọn: " + this.files[0].name;
+                    document.getElementById("cv_filename_display").parentElement.style.borderColor = "#00b14f";
+                    document.getElementById("cv_filename_display").parentElement.style.color = "#00b14f";
+                }
+            });
+        }
     });
+
+    // JS Logic: Gửi AJAX xóa CV
+    function deleteCV() {
+        if (confirm("Bạn có chắc chắn muốn xóa hệ thống CV này không? Hành động này không thể hoàn tác.")) {
+            fetch("{% url 'delete_cv' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const cvItem = document.getElementById("cv-item");
+                    if(cvItem) cvItem.remove(); // Xóa thẻ badge cv mà ko bị reload trang
+                } else {
+                    alert("Lỗi: " + data.message);
+                }
+            })
+            .catch(error => {
+                console.error("Lỗi xóa CV:", error);
+                alert("Có lỗi xảy ra, vui lòng thử lại sau.");
+            });
+        }
+    }
 </script>
 {% endblock %}
