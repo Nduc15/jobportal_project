@@ -20,8 +20,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load biến môi trường từ file .env (bảo mật API key)
 load_dotenv(BASE_DIR / '.env')
 
-# Gemini AI API Key - đọc từ file .env, không hardcode
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+# Gemini AI API Key - đọc từ file .env, nếu không có sẽ dùng Key mặc định (để giảng viên dễ chấm bài)
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', 'AIzaSyAf9oL1mGcCINtGkHQE5J0wxclwgrUIO90')
 
 
 # Quick-start development settings - unsuitable for production
