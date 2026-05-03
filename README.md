@@ -2,7 +2,7 @@
 
 Dự án cổng thông tin việc làm hiện đại, hỗ trợ ứng viên tạo CV Online và giúp nhà tuyển dụng phân tích mức độ phù hợp của ứng viên bằng công nghệ AI (Google Gemini).
 
-## 🚀 Các tính năng chính
+##  Các tính năng chính
 - **Dành cho Ứng viên:** Tìm kiếm việc làm, Lưu tin, Tạo CV Online chuyên nghiệp, Theo dõi lịch phỏng vấn.
 - **Dành cho Nhà tuyển dụng:** Đăng tin tuyển dụng, Quản lý ứng viên, **AI Matching** (Tự động phân tích điểm kỹ năng, kinh nghiệm và gợi ý câu hỏi phỏng vấn).
 - **Hệ thống lịch hẹn:** Đặt lịch phỏng vấn trực tuyến/trực tiếp và thông báo ngay trên Dashboard.
